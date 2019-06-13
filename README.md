@@ -1,4 +1,4 @@
-# kubectl-oidc-proxy
+# kubectl-oidc-port-forward
 
 This is a kubectl plugin of the reverse proxy with the `authorization` header.
 It provides OpenID Connect authentication for Kubernetes Dashboard.
@@ -9,7 +9,7 @@ It provides OpenID Connect authentication for Kubernetes Dashboard.
 ## Getting Started
 
 ```sh
-go build -o kubectl-oidc_proxy
+go build -o kubectl-oidc_port_forward
 ```
 
 You need to setup Kubernetes OpenID Connect authentication and

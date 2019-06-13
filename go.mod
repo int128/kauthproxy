@@ -1,4 +1,4 @@
-module gitlab.com/int128/kubectl-oidc-proxy
+module gitlab.com/int128/kubectl-oidc-port-forward
 
 go 1.12
 
