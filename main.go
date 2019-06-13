@@ -1,17 +1,22 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
+	"os/exec"
+	"os/signal"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	// https://github.com/kubernetes/client-go/issues/345
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 )
 
 type proxyHandler struct {
@@ -53,7 +58,34 @@ func (h *proxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func runProxy(f *genericclioptions.ConfigFlags) error {
+func execKubectl(ctx context.Context, args []string) error {
+	args = append([]string{"port-forward"}, args...)
+	log.Printf("Starting kubectl %v", args)
+	c := exec.Command("kubectl", args...)
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	if err := c.Start(); err != nil {
+		return xerrors.Errorf("could not run kubectl %+v: %w", args, err)
+	}
+	log.Printf("kubectl running")
+	go func() {
+		select {
+		case <-ctx.Done():
+			log.Printf("sending signal to kubectl")
+			if err := c.Process.Signal(os.Interrupt); err != nil {
+				log.Printf("error while sending signal to kubectl: %s", err)
+			}
+		}
+	}()
+	if err := c.Wait(); err != nil {
+		return xerrors.Errorf("error while running kubectl %+v: %w", args, err)
+	}
+	log.Printf("kubectl exited")
+	return nil
+}
+
+func runReverseProxyServer(ctx context.Context, f *genericclioptions.ConfigFlags, portForwardArgs []string) error {
 	config, err := f.ToRESTConfig()
 	if err != nil {
 		return xerrors.Errorf("could not load the config: %w", err)
@@ -77,26 +109,64 @@ func runProxy(f *genericclioptions.ConfigFlags) error {
 		},
 	}
 	log.Printf("Open http://%s", server.Addr)
-	if err := server.ListenAndServe(); err != nil {
-		return xerrors.Errorf("could not start a server: %w", err)
+
+	eg, ctx := errgroup.WithContext(ctx)
+	eg.Go(func() error {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			return xerrors.Errorf("could not start a server: %w", err)
+		}
+		return nil
+	})
+	eg.Go(func() error {
+		select {
+		case <-ctx.Done():
+			log.Printf("Shutting down the server")
+			if err := server.Shutdown(ctx); err != nil {
+				return xerrors.Errorf("could not stop the server: %w", err)
+			}
+			return nil
+		}
+	})
+	eg.Go(func() error {
+		if err := execKubectl(ctx, portForwardArgs); err != nil {
+			return xerrors.Errorf("could not run a port forwarder: %w", err)
+		}
+		return nil
+	})
+	if err := eg.Wait(); err != nil {
+		return xerrors.Errorf("error while running the reverse proxy: %w", err)
 	}
 	return nil
 }
 
 func run(osArgs []string) int {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	defer signal.Stop(signals)
+	go func() {
+		<-signals
+		cancel()
+	}()
+
 	var exitCode int
 	f := genericclioptions.NewConfigFlags()
 	rootCmd := cobra.Command{
-		Use: filepath.Base(osArgs[0]),
+		Use:     "kubectl oidc-port-forward TYPE/NAME [options] LOCAL_PORT:REMOTE_PORT",
+		Short:   "Forward one or more local ports to a pod",
+		Example: `  kubectl -n kube-system oidc-port-forward svc/kubernetes-dashboard 8443:443`,
+		Args:    cobra.MinimumNArgs(2),
 		Run: func(*cobra.Command, []string) {
-			if err := runProxy(f); err != nil {
+			if err := runReverseProxyServer(ctx, f, osArgs[1:]); err != nil {
 				log.Printf("error: %s", err)
 				exitCode = 1
 			}
 		},
 	}
-	f.AddFlags(rootCmd.Flags())
+	f.AddFlags(rootCmd.PersistentFlags())
 
+	rootCmd.Version = "v0.0.1"
 	rootCmd.SetArgs(osArgs[1:])
 	if err := rootCmd.Execute(); err != nil {
 		return 1
