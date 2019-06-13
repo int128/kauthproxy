@@ -26,3 +26,26 @@ kubectl oidc-port-forward svc/kubernetes-dashboard 8443:443
 ```
 
 Open http://localhost:8888 and then the Kubernetes Dashboard should appear.
+
+
+### How it works
+
+oidc-port-forward starts a reverse proxy and executes the `kubectl port-forward` command.
+
+```
++---------------------------+
+| Browser                   |
++---------------------------+
+  ↓ http/8888
++---------------------------+
+| kubectl oidc-port-forward |
++---------------------------+
+  ↓ https/8443 (adding authorization header)
++---------------------------+
+| kubectl port-forward      |
++---------------------------+
+  ↓ https/443
++---------------------------+
+| svc/kubernetes-dashboard  |
++---------------------------+
+```
