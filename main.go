@@ -58,34 +58,7 @@ func (h *proxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func execKubectl(ctx context.Context, args []string) error {
-	args = append([]string{"port-forward"}, args...)
-	log.Printf("Starting kubectl %v", args)
-	c := exec.Command("kubectl", args...)
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	if err := c.Start(); err != nil {
-		return xerrors.Errorf("could not run kubectl %+v: %w", args, err)
-	}
-	log.Printf("kubectl running")
-	go func() {
-		select {
-		case <-ctx.Done():
-			log.Printf("sending signal to kubectl")
-			if err := c.Process.Signal(os.Interrupt); err != nil {
-				log.Printf("error while sending signal to kubectl: %s", err)
-			}
-		}
-	}()
-	if err := c.Wait(); err != nil {
-		return xerrors.Errorf("error while running kubectl %+v: %w", args, err)
-	}
-	log.Printf("kubectl exited")
-	return nil
-}
-
-func runReverseProxyServer(ctx context.Context, f *genericclioptions.ConfigFlags, portForwardArgs []string) error {
+func startReverseProxyServer(ctx context.Context, eg *errgroup.Group, f *genericclioptions.ConfigFlags) error {
 	config, err := f.ToRESTConfig()
 	if err != nil {
 		return xerrors.Errorf("could not load the config: %w", err)
@@ -109,8 +82,6 @@ func runReverseProxyServer(ctx context.Context, f *genericclioptions.ConfigFlags
 		},
 	}
 	log.Printf("Open http://%s", server.Addr)
-
-	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			return xerrors.Errorf("could not start a server: %w", err)
@@ -127,19 +98,41 @@ func runReverseProxyServer(ctx context.Context, f *genericclioptions.ConfigFlags
 			return nil
 		}
 	})
-	eg.Go(func() error {
-		if err := execKubectl(ctx, portForwardArgs); err != nil {
-			return xerrors.Errorf("could not run a port forwarder: %w", err)
-		}
-		return nil
-	})
-	if err := eg.Wait(); err != nil {
-		return xerrors.Errorf("error while running the reverse proxy: %w", err)
-	}
 	return nil
 }
 
-func run(osArgs []string) int {
+func startKubectlPortForward(ctx context.Context, eg *errgroup.Group, args []string) error {
+	args = append([]string{"port-forward"}, args...)
+	log.Printf("Starting kubectl %v", args)
+	c := exec.Command("kubectl", args...)
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	if err := c.Start(); err != nil {
+		return xerrors.Errorf("could not run kubectl %+v: %w", args, err)
+	}
+	log.Printf("kubectl running")
+	eg.Go(func() error {
+		if err := c.Wait(); err != nil {
+			return xerrors.Errorf("error while running kubectl %+v: %w", args, err)
+		}
+		log.Printf("kubectl exited")
+		return nil
+	})
+	eg.Go(func() error {
+		select {
+		case <-ctx.Done():
+			log.Printf("sending a signal to kubectl process")
+			if err := c.Process.Signal(os.Interrupt); err != nil {
+				return xerrors.Errorf("error while sending a signal to kubectl process: %w", err)
+			}
+		}
+		return nil
+	})
+	return nil
+}
+
+func runPortForward(f *genericclioptions.ConfigFlags, osArgs []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	signals := make(chan os.Signal, 1)
@@ -149,7 +142,20 @@ func run(osArgs []string) int {
 		<-signals
 		cancel()
 	}()
+	eg, ctx := errgroup.WithContext(ctx)
+	if err := startKubectlPortForward(ctx, eg, osArgs[1:]); err != nil {
+		return xerrors.Errorf("could not start a kubectl process: %w", err)
+	}
+	if err := startReverseProxyServer(ctx, eg, f); err != nil {
+		return xerrors.Errorf("could not start a reverse proxy server: %w", err)
+	}
+	if err := eg.Wait(); err != nil {
+		return xerrors.Errorf("error while port-forwarding: %w", err)
+	}
+	return nil
+}
 
+func run(osArgs []string) int {
 	var exitCode int
 	f := genericclioptions.NewConfigFlags()
 	rootCmd := cobra.Command{
@@ -158,7 +164,7 @@ func run(osArgs []string) int {
 		Example: `  kubectl -n kube-system oidc-port-forward svc/kubernetes-dashboard 8443:443`,
 		Args:    cobra.MinimumNArgs(2),
 		Run: func(*cobra.Command, []string) {
-			if err := runReverseProxyServer(ctx, f, osArgs[1:]); err != nil {
+			if err := runPortForward(f, osArgs); err != nil {
 				log.Printf("error: %s", err)
 				exitCode = 1
 			}
