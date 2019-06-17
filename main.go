@@ -3,10 +3,9 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
-	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -19,45 +18,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 )
 
-type proxyHandler struct {
-	baseURL string
-	token   string
-	client  *http.Client
-}
-
-func (h *proxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	proxyReq, err := http.NewRequest(req.Method, h.baseURL+req.URL.String(), req.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
-	// TODO: exclude hop-by-hop headers
-	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers#hbh
-	for k, v := range req.Header {
-		for _, v := range v {
-			proxyReq.Header.Add(k, v)
-			log.Printf("Request header: %s: %s", k, v)
-		}
-	}
-	proxyReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", h.token))
-	resp, err := h.client.Do(proxyReq)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
-	defer resp.Body.Close()
-	for k, v := range resp.Header {
-		for _, v := range v {
-			w.Header().Add(k, v)
-			log.Printf("Response header: %s: %s", k, v)
-		}
-	}
-	w.WriteHeader(resp.StatusCode)
-	if _, err := io.Copy(w, resp.Body); err != nil {
-		log.Printf("error while writing response body: %s", err)
-	}
-}
-
 func startReverseProxyServer(ctx context.Context, eg *errgroup.Group, f *genericclioptions.ConfigFlags) error {
 	config, err := f.ToRESTConfig()
 	if err != nil {
@@ -65,20 +25,21 @@ func startReverseProxyServer(ctx context.Context, eg *errgroup.Group, f *generic
 	}
 	token := config.AuthProvider.Config["id-token"]
 	log.Printf("Using bearer token: %s", token)
-	client := &http.Client{
-		//TODO: set timeouts
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		},
-	}
 	server := &http.Server{
 		Addr: "localhost:8888",
-		Handler: &proxyHandler{
-			baseURL: "https://localhost:8443",
-			token:   token,
-			client:  client,
+		Handler: &httputil.ReverseProxy{
+			Transport: &http.Transport{
+				//TODO: set timeouts
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+			Director: func(r *http.Request) {
+				r.URL.Scheme = "https"
+				r.URL.Host = "localhost:8443"
+				r.Host = ""
+				r.Header.Set("Authorization", "Bearer "+token)
+			},
 		},
 	}
 	log.Printf("Open http://%s", server.Addr)
