@@ -5,12 +5,12 @@ import (
 	"crypto/tls"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"os"
 	"os/exec"
 	"os/signal"
 
 	"github.com/spf13/cobra"
+	"gitlab.com/int128/kubectl-oidc-port-forward/reverseproxy"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -25,39 +25,17 @@ func startReverseProxyServer(ctx context.Context, eg *errgroup.Group, f *generic
 	}
 	token := config.AuthProvider.Config["id-token"]
 	log.Printf("Using bearer token: %s", token)
-	server := &http.Server{
-		Addr: "localhost:8888",
-		Handler: &httputil.ReverseProxy{
-			Transport: &http.Transport{
-				//TODO: set timeouts
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-			Director: func(r *http.Request) {
-				r.URL.Scheme = "https"
-				r.URL.Host = "localhost:8443"
-				r.Host = ""
-				r.Header.Set("Authorization", "Bearer "+token)
+	reverseproxy.Start(ctx, eg, 8888, reverseproxy.Target{
+		Transport: &http.Transport{
+			//TODO: set timeouts
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
 			},
 		},
-	}
-	log.Printf("Open http://%s", server.Addr)
-	eg.Go(func() error {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			return xerrors.Errorf("could not start a server: %w", err)
-		}
-		return nil
-	})
-	eg.Go(func() error {
-		select {
-		case <-ctx.Done():
-			log.Printf("Shutting down the server")
-			if err := server.Shutdown(ctx); err != nil {
-				return xerrors.Errorf("could not stop the server: %w", err)
-			}
-			return nil
-		}
+		Scheme: "https",
+		Port:   8443,
+	}, func(r *http.Request) {
+		r.Header.Set("Authorization", "Bearer "+token)
 	})
 	return nil
 }

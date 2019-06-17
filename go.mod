@@ -19,8 +19,9 @@ require (
 	github.com/spf13/cobra v0.0.4 // indirect
 	golang.org/x/net v0.0.0-20190606173856-1492cefac77f // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
+	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
-	golang.org/x/xerrors v0.0.0-20190513163551-3ee3066db522 // indirect
+	golang.org/x/xerrors v0.0.0-20190513163551-3ee3066db522
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/api v0.0.0-20190111032252-67edc246be36 // indirect
 	k8s.io/apimachinery v0.0.0-20181127025237-2b1284ed4c93 // indirect
