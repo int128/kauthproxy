@@ -6,10 +6,10 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"os/signal"
 
 	"github.com/spf13/cobra"
+	"gitlab.com/int128/kubectl-oidc-port-forward/portforward"
 	"gitlab.com/int128/kubectl-oidc-port-forward/reverseproxy"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
@@ -40,37 +40,6 @@ func startReverseProxyServer(ctx context.Context, eg *errgroup.Group, f *generic
 	return nil
 }
 
-func startKubectlPortForward(ctx context.Context, eg *errgroup.Group, args []string) error {
-	args = append([]string{"port-forward"}, args...)
-	log.Printf("Starting kubectl %v", args)
-	c := exec.Command("kubectl", args...)
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	if err := c.Start(); err != nil {
-		return xerrors.Errorf("could not run kubectl %+v: %w", args, err)
-	}
-	log.Printf("kubectl running")
-	eg.Go(func() error {
-		if err := c.Wait(); err != nil {
-			return xerrors.Errorf("error while running kubectl %+v: %w", args, err)
-		}
-		log.Printf("kubectl exited")
-		return nil
-	})
-	eg.Go(func() error {
-		select {
-		case <-ctx.Done():
-			log.Printf("sending a signal to kubectl process")
-			if err := c.Process.Signal(os.Interrupt); err != nil {
-				return xerrors.Errorf("error while sending a signal to kubectl process: %w", err)
-			}
-		}
-		return nil
-	})
-	return nil
-}
-
 func runPortForward(f *genericclioptions.ConfigFlags, osArgs []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -82,7 +51,7 @@ func runPortForward(f *genericclioptions.ConfigFlags, osArgs []string) error {
 		cancel()
 	}()
 	eg, ctx := errgroup.WithContext(ctx)
-	if err := startKubectlPortForward(ctx, eg, osArgs[1:]); err != nil {
+	if err := portforward.Start(ctx, eg, osArgs[1:]); err != nil {
 		return xerrors.Errorf("could not start a kubectl process: %w", err)
 	}
 	if err := startReverseProxyServer(ctx, eg, f); err != nil {
