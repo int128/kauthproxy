@@ -2,6 +2,7 @@ package portforward
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -10,8 +11,22 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func Start(ctx context.Context, eg *errgroup.Group, args []string) error {
-	args = append([]string{"port-forward"}, args...)
+type Source struct {
+	Port int
+}
+
+type Target struct {
+	KubectlFlags []string
+	Resource     string // TYPE/NAME, e.g. svc/kubernetes-dashboard
+	Port         int
+}
+
+func Start(ctx context.Context, eg *errgroup.Group, source Source, target Target) error {
+	args := []string{"port-forward"}
+	args = append(args, target.KubectlFlags...)
+	args = append(args, target.Resource)
+	args = append(args, fmt.Sprintf("%d:%d", source.Port, target.Port))
+
 	log.Printf("Starting kubectl %v", args)
 	c := exec.Command("kubectl", args...)
 	c.Stdin = os.Stdin

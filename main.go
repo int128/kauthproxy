@@ -1,12 +1,25 @@
 package main
 
 import (
-	"gitlab.com/int128/kubectl-oidc-port-forward/cmd"
+	"context"
 	"os"
-	// https://github.com/kubernetes/client-go/issues/345
-	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
+	"os/signal"
+
+	"gitlab.com/int128/kubectl-oidc-port-forward/cmd"
 )
 
 func main() {
-	os.Exit(cmd.Run(os.Args))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// cancel the context on interrupted (ctrl+c)
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	defer signal.Stop(signals)
+	go func() {
+		<-signals
+		cancel()
+	}()
+
+	os.Exit(cmd.Run(ctx, os.Args))
 }

@@ -11,6 +11,10 @@ import (
 	"golang.org/x/xerrors"
 )
 
+type Source struct {
+	Port int
+}
+
 type Target struct {
 	Transport http.RoundTripper
 	Scheme    string
@@ -19,9 +23,9 @@ type Target struct {
 
 type Modifier func(r *http.Request)
 
-func Start(ctx context.Context, eg *errgroup.Group, port int, target Target, modifier Modifier) {
+func Start(ctx context.Context, eg *errgroup.Group, source Source, target Target, modifier Modifier) {
 	server := &http.Server{
-		Addr: fmt.Sprintf("localhost:%d", port),
+		Addr: fmt.Sprintf("localhost:%d", source.Port),
 		Handler: &httputil.ReverseProxy{
 			Transport: target.Transport,
 			Director: func(r *http.Request) {
