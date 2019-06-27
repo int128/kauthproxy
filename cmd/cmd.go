@@ -11,7 +11,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-func Run(ctx context.Context, osArgs []string) int {
+func Run(ctx context.Context, osArgs []string, version string) int {
 	var exitCode int
 	f := genericclioptions.NewConfigFlags()
 	rootCmd := cobra.Command{
@@ -28,7 +28,7 @@ func Run(ctx context.Context, osArgs []string) int {
 	}
 	f.AddFlags(rootCmd.Flags())
 
-	rootCmd.Version = "v0.0.1" //TODO: externalize
+	rootCmd.Version = version
 	rootCmd.SetArgs(osArgs[1:])
 	if err := rootCmd.Execute(); err != nil {
 		return 1

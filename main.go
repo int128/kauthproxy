@@ -8,6 +8,8 @@ import (
 	"gitlab.com/int128/kubectl-oidc-port-forward/cmd"
 )
 
+var version = "v0.0.0"
+
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -21,5 +23,5 @@ func main() {
 		cancel()
 	}()
 
-	os.Exit(cmd.Run(ctx, os.Args))
+	os.Exit(cmd.Run(ctx, os.Args, version))
 }
