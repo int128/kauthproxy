@@ -1,1 +1,5 @@
 /.idea
+
+/dist
+/coverage.out
+/kubectl-oidc_port_forward

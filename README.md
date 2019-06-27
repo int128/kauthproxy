@@ -1,4 +1,4 @@
-# kubectl-oidc-port-forward
+# kubectl-oidc-port-forward [![CircleCI](https://circleci.com/gh/int128/kubectl-oidc-port-forward.svg?style=shield)](https://circleci.com/gh/int128/kubectl-oidc-port-forward)
 
 This is a kubectl plugin of the reverse proxy with the `authorization` header.
 It provides OpenID Connect authentication for Kubernetes Dashboard.
