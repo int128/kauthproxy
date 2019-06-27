@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"crypto/tls"
+	"net"
 	"net/http"
 
 	"gitlab.com/int128/kubectl-oidc-port-forward/portforward"
@@ -23,8 +24,13 @@ type PortForwardIn struct {
 func PortForward(ctx context.Context, in PortForwardIn) error {
 	eg, ctx := errgroup.WithContext(ctx)
 
+	transitPort, err := findFreePort()
+	if err != nil {
+		return xerrors.Errorf("could not find a free port: %w", err)
+	}
+
 	if err := portforward.Start(ctx, eg, portforward.Source{
-		Port: 8443, //TODO: allocate a free port
+		Port: transitPort,
 	}, portforward.Target{
 		KubectlFlags: in.KubectlFlags,
 		Resource:     in.TargetResource,
@@ -46,11 +52,24 @@ func PortForward(ctx context.Context, in PortForwardIn) error {
 			},
 		},
 		Scheme: in.TargetScheme,
-		Port:   8443, //TODO: allocate a free port
+		Port:   transitPort,
 	}, modifier)
 
 	if err := eg.Wait(); err != nil {
 		return xerrors.Errorf("error while port-forwarding: %w", err)
 	}
 	return nil
+}
+
+func findFreePort() (int, error) {
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		return 0, xerrors.Errorf("could not listen: %w", err)
+	}
+	defer l.Close()
+	addr, ok := l.Addr().(*net.TCPAddr)
+	if !ok {
+		return 0, xerrors.Errorf("unknown type %T", l.Addr())
+	}
+	return addr.Port, nil
 }

@@ -22,7 +22,7 @@ export KUBECONFIG=.kubeconfig
 kubectl oidc-login
 
 # Forward local port to the Kubernetes Dashboard service
-kubectl oidc-port-forward svc/kubernetes-dashboard 8443:443
+kubectl oidc-port-forward svc/kubernetes-dashboard 8888:https/443
 ```
 
 Open http://localhost:8888 and then the Kubernetes Dashboard should appear.
@@ -38,11 +38,11 @@ oidc-port-forward starts a reverse proxy and executes the `kubectl port-forward`
 +---------------------------+
   ↓ http/8888
 +---------------------------+
-| kubectl oidc-port-forward |
+| kubectl oidc-port-forward | This adds an authorization header.
 +---------------------------+
-  ↓ https/8443 (adding authorization header)
+  ↓ https/*
 +---------------------------+
-| kubectl port-forward      |
+| kubectl port-forward      | This forwards requests to the service or pod.
 +---------------------------+
   ↓ https/443
 +---------------------------+
