@@ -43,14 +43,12 @@ func Start(ctx context.Context, eg *errgroup.Group, source Source, target Target
 		return nil
 	})
 	eg.Go(func() error {
-		select {
-		case <-ctx.Done():
-			log.Printf("Shutting down the server")
-			if err := server.Shutdown(ctx); err != nil {
-				return xerrors.Errorf("could not stop the server: %w", err)
-			}
-			return nil
+		<-ctx.Done()
+		log.Printf("Shutting down the server")
+		if err := server.Shutdown(ctx); err != nil {
+			return xerrors.Errorf("could not stop the server: %w", err)
 		}
+		return nil
 	})
 }
 

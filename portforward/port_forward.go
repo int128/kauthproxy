@@ -44,12 +44,10 @@ func Start(ctx context.Context, eg *errgroup.Group, source Source, target Target
 		return nil
 	})
 	eg.Go(func() error {
-		select {
-		case <-ctx.Done():
-			log.Printf("sending a signal to kubectl process")
-			if err := c.Process.Signal(os.Interrupt); err != nil {
-				return xerrors.Errorf("error while sending a signal to kubectl process: %w", err)
-			}
+		<-ctx.Done()
+		log.Printf("sending a signal to kubectl process")
+		if err := c.Process.Signal(os.Interrupt); err != nil {
+			return xerrors.Errorf("error while sending a signal to kubectl process: %w", err)
 		}
 		return nil
 	})
