@@ -1,4 +1,4 @@
-module gitlab.com/int128/kubectl-oidc-port-forward
+module gitlab.com/int128/kubectl-auth-port-forward
 
 go 1.12
 

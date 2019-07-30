@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"gitlab.com/int128/kubectl-oidc-port-forward/usecases"
+	"gitlab.com/int128/kubectl-auth-port-forward/usecases"
 	"golang.org/x/xerrors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
@@ -21,9 +21,9 @@ func Run(ctx context.Context, osArgs []string, version string) int {
 		osArgs:      osArgs,
 	}
 	rootCmd := cobra.Command{
-		Use:     "kubectl oidc-port-forward TYPE/NAME [options] LOCAL_PORT:REMOTE_SCHEME/REMOTE_PORT",
+		Use:     "kubectl auth-port-forward TYPE/NAME [options] LOCAL_PORT:REMOTE_SCHEME/REMOTE_PORT",
 		Short:   "Forward a local port to a pod",
-		Example: `  kubectl -n kube-system oidc-port-forward svc/kubernetes-dashboard 8443:https/443`,
+		Example: `  kubectl -n kube-system auth-port-forward svc/kubernetes-dashboard 8443:https/443`,
 		Args:    cobra.ExactArgs(2),
 		Run: func(_ *cobra.Command, args []string) {
 			rootOpt.cmdArgs = args

@@ -1,6 +1,6 @@
-# kubectl-oidc-port-forward [![CircleCI](https://circleci.com/gh/int128/kubectl-oidc-port-forward.svg?style=shield)](https://circleci.com/gh/int128/kubectl-oidc-port-forward)
+# kubectl-auth-port-forward [![CircleCI](https://circleci.com/gh/int128/kubectl-auth-port-forward.svg?style=shield)](https://circleci.com/gh/int128/kubectl-auth-port-forward)
 
-This is a kubectl plugin for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens), which provides port forwarding with the `authorization` header.
+This is a kubectl plugin for port forwarding with an `authorization` header.
 
 You can access to the [Kubernetes Dashboard](https://github.com/kubernetes/dashboard) using OIDC authentication via a tunnel established by this plugin.
 
@@ -10,7 +10,7 @@ You can access to the [Kubernetes Dashboard](https://github.com/kubernetes/dashb
 +---------------------------+
   ↓ http://localhost:8888
 +---------------------------+
-| kubectl oidc-port-forward | This adds the authorization header.
+| kubectl auth-port-forward | This adds the authorization header.
 +---------------------------+
   ↓ https://localhost:x
 +---------------------------+
@@ -37,7 +37,7 @@ export KUBECONFIG=.kubeconfig
 kubectl oidc-login
 
 # Forward the local port to the Kubernetes Dashboard service
-kubectl oidc-port-forward svc/kubernetes-dashboard 8888:https/443
+kubectl auth-port-forward svc/kubernetes-dashboard 8888:https/443
 ```
 
 Open http://localhost:8888 and then the Kubernetes Dashboard should be shown.

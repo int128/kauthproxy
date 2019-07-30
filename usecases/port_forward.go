@@ -6,8 +6,8 @@ import (
 	"net"
 	"net/http"
 
-	"gitlab.com/int128/kubectl-oidc-port-forward/portforward"
-	"gitlab.com/int128/kubectl-oidc-port-forward/reverseproxy"
+	"gitlab.com/int128/kubectl-auth-port-forward/portforward"
+	"gitlab.com/int128/kubectl-auth-port-forward/reverseproxy"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 )
