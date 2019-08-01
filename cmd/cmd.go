@@ -17,7 +17,7 @@ func Run(ctx context.Context, osArgs []string, version string) int {
 	var exitCode int
 
 	rootOpt := &rootCmdOptions{
-		ConfigFlags: genericclioptions.NewConfigFlags(),
+		ConfigFlags: genericclioptions.NewConfigFlags(false),
 		osArgs:      osArgs,
 	}
 	rootCmd := cobra.Command{
@@ -115,7 +115,7 @@ func parsePortPairNotation(s string) (*portPair, error) {
 }
 
 func extractKubectlFlags(osArgs []string) ([]string, error) {
-	f := genericclioptions.NewConfigFlags()
+	f := genericclioptions.NewConfigFlags(false)
 	fs := pflag.NewFlagSet("", pflag.ContinueOnError)
 	f.AddFlags(fs)
 	fs.ParseErrorsWhitelist.UnknownFlags = true
