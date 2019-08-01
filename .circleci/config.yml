@@ -17,8 +17,6 @@ jobs:
           curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ~/bin v1.16.0
       - run: go get github.com/int128/goxzst
       - checkout
-      # workaround for https://github.com/golang/go/issues/27925
-      - run: sed -e '/^k8s.io\/client-go /d' -i go.sum
       - run: make check
       - run: bash <(curl -s https://codecov.io/bash)
       - run: make run
