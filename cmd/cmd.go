@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/int128/kubectl-auth-port-forward/usecases"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"gitlab.com/int128/kubectl-auth-port-forward/usecases"
 	"golang.org/x/xerrors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )

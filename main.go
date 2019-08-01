@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"gitlab.com/int128/kubectl-auth-port-forward/cmd"
+	"github.com/int128/kubectl-auth-port-forward/cmd"
 )
 
 var version = "v0.0.0"
