@@ -6,17 +6,13 @@ You can access to the [Kubernetes Dashboard](https://github.com/kubernetes/dashb
 
 ```
 +---------------------------+
-| Browser                   |
+| browser                   |
 +---------------------------+
-  ↓ http://localhost:8888
-+---------------------------+
-| kubectl auth-port-forward | This adds the authorization header.
-+---------------------------+
-  ↓ https://localhost:x
-+---------------------------+
-| kubectl port-forward      | This forwards requests to the service.
-+---------------------------+
-  ↓ TCP
+  ↓ http://localhost:8000
++---------------------------+     +-----------------------------+
+| kubectl auth-port-forward | <-> | client-go credential plugin |
++---------------------------+     +-----------------------------+
+  ↓ https://localhost:443
 +---------------------------+
 | svc/kubernetes-dashboard  |
 +---------------------------+
@@ -27,17 +23,45 @@ You can access to the [Kubernetes Dashboard](https://github.com/kubernetes/dashb
 
 ## Getting Started
 
-You need to configure the OIDC provider, Kubernetes API server, kubectl authentication and role binding.
+You need to set the credential plugin in the kubeconfig.
 
-```sh
-# Point the kubeconfig
-export KUBECONFIG=.kubeconfig
+If you are using [aws eks get-token](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html),
 
-# Login to the OIDC provider
-kubectl oidc-login
-
-# Forward the local port to the Kubernetes Dashboard service
-kubectl auth-port-forward svc/kubernetes-dashboard 8888:https/443
+```yaml
+users:
+- name: iam
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: aws
+      args:
+      - eks
+      - get-token
+      - --cluster-name
+      - CLUSTER_NAME
 ```
 
-Open http://localhost:8888 and then the Kubernetes Dashboard should be shown.
+If you are using [kubelogin](https://github.com/int128/kubelogin),
+
+```yaml
+users:
+- name: keycloak
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: kubectl
+      args:
+      - oidc-login
+      - get-token
+      - --oidc-issuer-url=https://issuer.example.com
+      - --oidc-client-id=YOUR_CLIENT_ID
+      - --oidc-client-secret=YOUR_CLIENT_SECRET
+```
+
+Run the plugin.
+
+```sh
+kubectl auth-port-forward -n kubernetes-dashboard kubernetes-dashboard-xxx 8080:https/8443
+```
+
+Open http://localhost:8080 and then the Kubernetes Dashboard should be shown.

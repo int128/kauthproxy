@@ -8,78 +8,68 @@ import (
 
 	"github.com/int128/kubectl-auth-port-forward/usecases"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"golang.org/x/xerrors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 func Run(ctx context.Context, osArgs []string, version string) int {
-	var exitCode int
-
-	rootOpt := &rootCmdOptions{
-		ConfigFlags: genericclioptions.NewConfigFlags(false),
-		osArgs:      osArgs,
-	}
-	rootCmd := cobra.Command{
-		Use:     "kubectl auth-port-forward TYPE/NAME [options] LOCAL_PORT:REMOTE_SCHEME/REMOTE_PORT",
-		Short:   "Forward a local port to a pod",
-		Example: `  kubectl -n kube-system auth-port-forward svc/kubernetes-dashboard 8443:https/443`,
-		Args:    cobra.ExactArgs(2),
-		Run: func(_ *cobra.Command, args []string) {
-			rootOpt.cmdArgs = args
-			if err := runRootCmd(ctx, rootOpt); err != nil {
-				log.Printf("error: %s", err)
-				exitCode = 1
-			}
-		},
-	}
-	rootOpt.ConfigFlags.AddFlags(rootCmd.Flags())
-
+	rootCmd := newRootCmd(ctx)
+	rootCmd.SilenceErrors = true
+	rootCmd.SilenceUsage = true
 	rootCmd.Version = version
+
 	rootCmd.SetArgs(osArgs[1:])
 	if err := rootCmd.Execute(); err != nil {
+		log.Printf("error: %s", err)
 		return 1
 	}
-	return exitCode
+	return 0
 }
 
 type rootCmdOptions struct {
 	*genericclioptions.ConfigFlags
-	osArgs  []string
-	cmdArgs []string
 }
 
-func runRootCmd(ctx context.Context, o *rootCmdOptions) error {
-	config, err := o.ConfigFlags.ToRESTConfig()
-	if err != nil {
-		return xerrors.Errorf("could not load the config: %w", err)
+func (o *rootCmdOptions) Namespace() string {
+	if o.ConfigFlags.Namespace != nil && *o.ConfigFlags.Namespace != "" {
+		return *o.ConfigFlags.Namespace
 	}
-	token := config.AuthProvider.Config["id-token"]
-	if token == "" {
-		return xerrors.Errorf("could not find a token from the kubeconfig")
-	}
+	return "default"
+}
 
-	kubectlFlags, err := extractKubectlFlags(o.osArgs)
-	if err != nil {
-		return xerrors.Errorf("could not extract the kubectl flags: %w", err)
+func newRootCmd(ctx context.Context) *cobra.Command {
+	var o rootCmdOptions
+	o.ConfigFlags = genericclioptions.NewConfigFlags(false)
+	c := &cobra.Command{
+		Use:     "kubectl auth-port-forward POD_NAME LOCAL_PORT:POD_SCHEME/POD_PORT",
+		Short:   "Forward a local port to a pod",
+		Example: `  kubectl -n kube-system auth-port-forward kubernetes-dashboard-xxx 8443:https/8443`,
+		Args:    cobra.ExactArgs(2),
+		RunE: func(_ *cobra.Command, args []string) error {
+			portPair, err := parsePortPairNotation(args[1])
+			if err != nil {
+				return xerrors.Errorf("invalid port pair: %w", err)
+			}
+			config, err := o.ConfigFlags.ToRESTConfig()
+			if err != nil {
+				return xerrors.Errorf("could not load the config: %w", err)
+			}
+			in := usecases.PortForwardIn{
+				Config:             config,
+				Namespace:          o.Namespace(),
+				PodName:            args[0],
+				PodContainerPort:   portPair.remotePort,
+				PodContainerScheme: portPair.remoteScheme,
+				LocalPort:          portPair.localPort,
+			}
+			if err := usecases.PortForward(ctx, in); err != nil {
+				return xerrors.Errorf("error while port forwarding: %w", err)
+			}
+			return nil
+		},
 	}
-
-	targetResource, portPairNotation := o.cmdArgs[0], o.cmdArgs[1]
-	pair, err := parsePortPairNotation(portPairNotation)
-	if err != nil {
-		return xerrors.Errorf("invalid port pair notation `%s`: %w", portPairNotation, err)
-	}
-	if err := usecases.PortForward(ctx, usecases.PortForwardIn{
-		KubectlFlags:   kubectlFlags,
-		Token:          token,
-		SourcePort:     pair.localPort,
-		TargetPort:     pair.remotePort,
-		TargetScheme:   pair.remoteScheme,
-		TargetResource: targetResource,
-	}); err != nil {
-		return xerrors.Errorf("error while port forwarding: %w", err)
-	}
-	return nil
+	o.ConfigFlags.AddFlags(c.Flags())
+	return c
 }
 
 type portPair struct {
@@ -112,19 +102,4 @@ func parsePortPairNotation(s string) (*portPair, error) {
 		remotePort:   remotePort,
 		remoteScheme: remoteScheme,
 	}, nil
-}
-
-func extractKubectlFlags(osArgs []string) ([]string, error) {
-	f := genericclioptions.NewConfigFlags(false)
-	fs := pflag.NewFlagSet("", pflag.ContinueOnError)
-	f.AddFlags(fs)
-	fs.ParseErrorsWhitelist.UnknownFlags = true
-	if err := fs.Parse(osArgs[1:]); err != nil {
-		return nil, xerrors.Errorf("could not parse the arguments: %w", err)
-	}
-	var flags []string
-	fs.Visit(func(f *pflag.Flag) {
-		flags = append(flags, "--"+f.Name, f.Value.String())
-	})
-	return flags, nil
 }
