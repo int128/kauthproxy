@@ -1,4 +1,4 @@
-# kubectl-auth-port-forward [![CircleCI](https://circleci.com/gh/int128/kubectl-auth-port-forward.svg?style=shield)](https://circleci.com/gh/int128/kubectl-auth-port-forward)
+# kubectl-auth-proxy [![CircleCI](https://circleci.com/gh/int128/kubectl-auth-proxy.svg?style=shield)](https://circleci.com/gh/int128/kubectl-auth-proxy)
 
 This is a kubectl plugin for port forwarding with an `authorization` header.
 
@@ -10,7 +10,7 @@ You can access to the [Kubernetes Dashboard](https://github.com/kubernetes/dashb
 +---------------------------+
   ↓ http://localhost:8000
 +---------------------------+     +-----------------------------+
-| kubectl auth-port-forward | <-> | client-go credential plugin |
+| kubectl auth-proxy        | <-> | client-go credential plugin |
 +---------------------------+     +-----------------------------+
   ↓ https://localhost:443
 +---------------------------+
@@ -61,7 +61,7 @@ users:
 Run the plugin.
 
 ```sh
-kubectl auth-port-forward -n kubernetes-dashboard kubernetes-dashboard-xxx 8080:https/8443
+kubectl auth-proxy -n kubernetes-dashboard kubernetes-dashboard-xxx 8080:https/8443
 ```
 
 Open http://localhost:8080 and then the Kubernetes Dashboard should be shown.

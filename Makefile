@@ -1,4 +1,4 @@
-TARGET := kubectl-auth_port_forward
+TARGET := kubectl-auth_proxy
 CIRCLE_TAG ?= HEAD
 LDFLAGS := -X main.version=$(CIRCLE_TAG)
 
@@ -14,15 +14,15 @@ $(TARGET): $(wildcard *.go)
 	go build -o $@ -ldflags "$(LDFLAGS)"
 
 run: $(TARGET)
-	PATH=.:$(PATH) kubectl auth-port-forward --help
+	PATH=.:$(PATH) kubectl auth-proxy --help
 
 dist:
-	VERSION=$(CIRCLE_TAG) goxzst -d dist/gh/ -o "$(TARGET)" -t "kubectl-auth-port-forward.rb auth-port-forward.yaml" -- -ldflags "$(LDFLAGS)"
-	mv dist/gh/kubectl-auth-port-forward.rb dist/
+	VERSION=$(CIRCLE_TAG) goxzst -d dist/gh/ -o "$(TARGET)" -t "kubectl-auth-proxy.rb auth-proxy.yaml" -- -ldflags "$(LDFLAGS)"
+	mv dist/gh/kubectl-auth-proxy.rb dist/
 
 release: dist
 	ghr -u "$(CIRCLE_PROJECT_USERNAME)" -r "$(CIRCLE_PROJECT_REPONAME)" "$(CIRCLE_TAG)" dist/gh/
-	ghcp -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -m "$(CIRCLE_TAG)" -C dist/ kubectl-auth-port-forward.rb
+	ghcp -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -m "$(CIRCLE_TAG)" -C dist/ kubectl-auth-proxy.rb
 
 clean:
 	-rm $(TARGET)

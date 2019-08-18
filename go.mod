@@ -1,4 +1,4 @@
-module github.com/int128/kubectl-auth-port-forward
+module github.com/int128/kubectl-auth-proxy
 
 go 1.12
 

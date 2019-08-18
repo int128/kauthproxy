@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/int128/kubectl-auth-port-forward/usecases"
+	"github.com/int128/kubectl-auth-proxy/usecases"
 	"github.com/spf13/cobra"
 	"golang.org/x/xerrors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -41,9 +41,9 @@ func newRootCmd(ctx context.Context) *cobra.Command {
 	var o rootCmdOptions
 	o.ConfigFlags = genericclioptions.NewConfigFlags(false)
 	c := &cobra.Command{
-		Use:     "kubectl auth-port-forward POD_NAME LOCAL_PORT:POD_SCHEME/POD_PORT",
+		Use:     "kubectl auth-proxy POD_NAME LOCAL_PORT:POD_SCHEME/POD_PORT",
 		Short:   "Forward a local port to a pod",
-		Example: `  kubectl -n kube-system auth-port-forward kubernetes-dashboard-xxx 8443:https/8443`,
+		Example: `  kubectl -n kube-system auth-proxy kubernetes-dashboard-xxx 8443:https/8443`,
 		Args:    cobra.ExactArgs(2),
 		RunE: func(_ *cobra.Command, args []string) error {
 			portPair, err := parsePortPairNotation(args[1])
