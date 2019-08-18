@@ -1,67 +1,96 @@
 # kubectl-auth-proxy [![CircleCI](https://circleci.com/gh/int128/kubectl-auth-proxy.svg?style=shield)](https://circleci.com/gh/int128/kubectl-auth-proxy)
 
-This is a kubectl plugin for port forwarding with an `authorization` header.
+This is a kubectl plugin of authentication proxy to a pod on Kubernetes.
+It consists from the reverse proxy and port forwarder.
 
-You can access to the [Kubernetes Dashboard](https://github.com/kubernetes/dashboard) using OIDC authentication via a tunnel established by this plugin.
+**Status**: alpha and not for production.
+
+Take a look at the concept:
 
 ```
-+---------------------------+
-| browser                   |
-+---------------------------+
++--------------------------------+
+| Browser                        |
++--------------------------------+
   ↓ http://localhost:8000
-+---------------------------+     +-----------------------------+
-| kubectl auth-proxy        | <-> | client-go credential plugin |
-+---------------------------+     +-----------------------------+
++--------------------------------+              +-----------------------------+
+| kubectl auth-proxy             | <-- TOKEN -- | client-go credential plugin |
++--------------------------------+              +-----------------------------+
   ↓ https://localhost:443
-+---------------------------+
-| svc/kubernetes-dashboard  |
-+---------------------------+
+  ↓ Authorization: Bearer TOKEN
++--------------------------------+
+| Kubernetes Dashboard (service) |
++--------------------------------+
 ```
-
-**Status:** Proof of concept. Not for production.
 
 
 ## Getting Started
 
-You need to set the credential plugin in the kubeconfig.
+### Kubernetes Dashboard on Amazon EKS
 
-If you are using [aws eks get-token](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html),
+You need to [configure the kubeconfig](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html) to use aws-iam-authenticator or `aws eks get-token`.
 
-```yaml
-users:
-- name: iam
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1beta1
-      command: aws
-      args:
-      - eks
-      - get-token
-      - --cluster-name
-      - CLUSTER_NAME
-```
-
-If you are using [kubelogin](https://github.com/int128/kubelogin),
-
-```yaml
-users:
-- name: keycloak
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1beta1
-      command: kubectl
-      args:
-      - oidc-login
-      - get-token
-      - --oidc-issuer-url=https://issuer.example.com
-      - --oidc-client-id=YOUR_CLIENT_ID
-      - --oidc-client-secret=YOUR_CLIENT_SECRET
-```
-
-Run the plugin.
+To run an authentication proxy to the service:
 
 ```sh
-kubectl auth-proxy -n kubernetes-dashboard kubernetes-dashboard-xxx 8080:https/8443
+kubectl auth-proxy -n kube-system kubernetes-dashboard-xxx 8000:https/8443
 ```
 
-Open http://localhost:8080 and then the Kubernetes Dashboard should be shown.
+Open http://localhost:8000 and you can access the Kubernetes Dashboard with the token.
+
+
+### Kubernetes Dashboard with OpenID Connect authentication
+
+You need to configure the kubeconfig to use [`kubectl oidc-login`](https://github.com/int128/kubelogin).
+
+Run the following command,
+
+```sh
+kubectl auth-proxy -n kube-system kubernetes-dashboard-xxx 8000:https/8443
+```
+
+Open http://localhost:8000 and you can access the Kubernetes Dashboard with the token.
+
+
+### Kibana with OpenID Connect authentication
+
+You need to configure the kubeconfig to use [`kubectl oidc-login`](https://github.com/int128/kubelogin).
+
+Run the following command,
+
+```sh
+kubectl auth-proxy kibana-xxx 8000:http/4180
+```
+
+Open http://localhost:8000 and you can access the Kibana with the token.
+
+
+## Usage
+
+```
+Forward a local port to a pod
+
+Usage:
+  kubectl auth-proxy POD_NAME LOCAL_PORT:POD_SCHEME/POD_PORT [flags]
+
+Examples:
+  kubectl -n kube-system auth-proxy kubernetes-dashboard-xxx 8443:https/8443
+
+Flags:
+      --as string                      Username to impersonate for the operation
+      --as-group stringArray           Group to impersonate for the operation, this flag can be repeated to specify multiple groups.
+      --cache-dir string               Default HTTP cache directory (default "~/.kube/http-cache")
+      --certificate-authority string   Path to a cert file for the certificate authority
+      --client-certificate string      Path to a client certificate file for TLS
+      --client-key string              Path to a client key file for TLS
+      --cluster string                 The name of the kubeconfig cluster to use
+      --context string                 The name of the kubeconfig context to use
+  -h, --help                           help for kubectl
+      --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
+      --kubeconfig string              Path to the kubeconfig file to use for CLI requests.
+  -n, --namespace string               If present, the namespace scope for this CLI request
+      --request-timeout string         The length of time to wait before giving up on a single server request. Non-zero values should contain a corresponding time unit (e.g. 1s, 2m, 3h). A value of zero means don't timeout requests. (default "0")
+  -s, --server string                  The address and port of the Kubernetes API server
+      --token string                   Bearer token for authentication to the API server
+      --user string                    The name of the kubeconfig user to use
+      --version                        version for kubectl
+```
