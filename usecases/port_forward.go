@@ -14,7 +14,8 @@ import (
 	"github.com/int128/kauthproxy/reverseproxy"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
@@ -22,12 +23,10 @@ import (
 )
 
 type PortForwardIn struct {
-	Config             *rest.Config
-	Namespace          string
-	PodName            string
-	PodContainerPort   int
-	PodContainerScheme string
-	LocalPort          int
+	Config    *rest.Config
+	Namespace string
+	RemoteURL *url.URL
+	LocalAddr string
 }
 
 func PortForward(ctx context.Context, in PortForwardIn) error {
@@ -45,10 +44,9 @@ func PortForward(ctx context.Context, in PortForwardIn) error {
 		return xerrors.Errorf("could not create a client: %w", err)
 	}
 
-	//TODO: resolve a service port
-	pod, err := clientset.CoreV1().Pods(in.Namespace).Get(in.PodName, v1.GetOptions{})
+	pod, containerPort, err := resolvePodContainerPort(in.RemoteURL, clientset, in.Namespace)
 	if err != nil {
-		return xerrors.Errorf("could not find the pod: %w", err)
+		return xerrors.Errorf("could not resolve a pod: %w", err)
 	}
 	log.Printf("Pod %s is %s", pod.Name, pod.Status.Phase)
 	portforwardURL, err := url.Parse(cfg.Host + pod.GetSelfLink() + "/portforward")
@@ -67,7 +65,7 @@ func PortForward(ctx context.Context, in PortForwardIn) error {
 	if err != nil {
 		return xerrors.Errorf("could not allocate a local port: %w", err)
 	}
-	portNotation := fmt.Sprintf("%d:%d", transitPort, in.PodContainerPort)
+	portNotation := fmt.Sprintf("%d:%s", transitPort, containerPort)
 	stopChan, readyChan := make(chan struct{}, 1), make(chan struct{})
 	forwarder, err := portforward.New(dialer, []string{portNotation}, stopChan, readyChan, os.Stdout, os.Stderr)
 	if err != nil {
@@ -78,18 +76,18 @@ func PortForward(ctx context.Context, in PortForwardIn) error {
 	modifier := func(r *http.Request) {
 		r.Header.Set("Authorization", "Bearer "+token)
 	}
-	reverseproxy.Start(ctx, eg, reverseproxy.Source{
-		Port: in.LocalPort,
-	}, reverseproxy.Target{
-		Transport: &http.Transport{
-			//TODO: set timeouts
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
+	reverseproxy.Start(ctx, eg,
+		reverseproxy.Source{Addr: in.LocalAddr},
+		reverseproxy.Target{
+			Transport: &http.Transport{
+				//TODO: set timeouts
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
 			},
-		},
-		Scheme: in.PodContainerScheme,
-		Port:   transitPort,
-	}, modifier)
+			Scheme: in.RemoteURL.Scheme,
+			Port:   transitPort,
+		}, modifier)
 	go func() {
 		<-ctx.Done()
 		close(stopChan)
@@ -104,6 +102,47 @@ func PortForward(ctx context.Context, in PortForwardIn) error {
 		return xerrors.Errorf("error while port-forwarding: %w", err)
 	}
 	return nil
+}
+
+func resolvePodContainerPort(url *url.URL, clientset *kubernetes.Clientset, namespace string) (*v1.Pod, string, error) {
+	hostname := url.Hostname()
+	var pod *v1.Pod
+	if strings.HasSuffix(hostname, ".svc") {
+		serviceName := strings.TrimSuffix(hostname, ".svc")
+		service, err := clientset.CoreV1().Services(namespace).Get(serviceName, metav1.GetOptions{})
+		if err != nil {
+			return nil, "", xerrors.Errorf("could not find the service: %w", err)
+		}
+		log.Printf("Service %s found", service.Name)
+		var selectors []string
+		for k, v := range service.Spec.Selector {
+			selectors = append(selectors, fmt.Sprintf("%s=%s", k, v))
+		}
+		selector := strings.Join(selectors, ",")
+		pods, err := clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: selector})
+		if err != nil {
+			return nil, "", xerrors.Errorf("could not find the pods by selector %s: %w", selector, err)
+		}
+		if len(pods.Items) == 0 {
+			return nil, "", xerrors.Errorf("no pod matched to selector %s", selector)
+		}
+		pod = &pods.Items[0]
+	} else {
+		var err error
+		pod, err = clientset.CoreV1().Pods(namespace).Get(hostname, metav1.GetOptions{})
+		if err != nil {
+			return nil, "", xerrors.Errorf("could not find the pod: %w", err)
+		}
+	}
+	if url.Port() != "" {
+		return pod, url.Port(), nil
+	}
+	for _, container := range pod.Spec.Containers {
+		for _, port := range container.Ports {
+			return pod, fmt.Sprintf("%d", port.ContainerPort), nil
+		}
+	}
+	return nil, "", xerrors.Errorf("no container port found in the pod %s", pod.Name)
 }
 
 func findFreePort() (int, error) {

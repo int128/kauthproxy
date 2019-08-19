@@ -32,7 +32,7 @@ You need to [configure the kubeconfig](https://docs.aws.amazon.com/eks/latest/us
 To run an authentication proxy to the service:
 
 ```sh
-kubectl auth-proxy -n kube-system kubernetes-dashboard-xxx 8000:https/8443
+kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
 ```
 
 Open http://localhost:8000 and you can access the Kubernetes Dashboard with the token.
@@ -45,7 +45,7 @@ You need to configure the kubeconfig to use [`kubectl oidc-login`](https://githu
 Run the following command,
 
 ```sh
-kubectl auth-proxy -n kube-system kubernetes-dashboard-xxx 8000:https/8443
+kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
 ```
 
 Open http://localhost:8000 and you can access the Kubernetes Dashboard with the token.
@@ -58,7 +58,7 @@ You need to configure the kubeconfig to use [`kubectl oidc-login`](https://githu
 Run the following command,
 
 ```sh
-kubectl auth-proxy kibana-xxx 8000:http/4180
+kubectl auth-proxy https://kibana
 ```
 
 Open http://localhost:8000 and you can access the Kibana with the token.
@@ -67,13 +67,18 @@ Open http://localhost:8000 and you can access the Kibana with the token.
 ## Usage
 
 ```
-Forward a local port to a pod
+Forward a local port to a pod or service via authentication proxy.
+
+To forward a local port to a service, set a service name with .svc suffix. e.g. http://service-name.svc
+To forward a local port to a pod, set a pod name. e.g. http://pod-name
+
+LOCAL_ADDR defaults to localhost:8000.
 
 Usage:
-  kubectl auth-proxy POD_NAME LOCAL_PORT:POD_SCHEME/POD_PORT [flags]
+  kubectl auth-proxy REMOTE_URL [LOCAL_ADDR] [flags]
 
 Examples:
-  kubectl -n kube-system auth-proxy kubernetes-dashboard-xxx 8443:https/8443
+  kubectl auth-proxy https://kubernetes-dashboard.svc
 
 Flags:
       --as string                      Username to impersonate for the operation

@@ -12,7 +12,7 @@ import (
 )
 
 type Source struct {
-	Port int
+	Addr string
 }
 
 type Target struct {
@@ -25,7 +25,7 @@ type Modifier func(r *http.Request)
 
 func Start(ctx context.Context, eg *errgroup.Group, source Source, target Target, modifier Modifier) {
 	server := &http.Server{
-		Addr: fmt.Sprintf("localhost:%d", source.Port),
+		Addr: source.Addr,
 		Handler: &httputil.ReverseProxy{
 			Transport: target.Transport,
 			Director: func(r *http.Request) {
