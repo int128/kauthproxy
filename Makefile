@@ -17,12 +17,12 @@ run: $(TARGET)
 	PATH=.:$(PATH) kubectl auth-proxy --help
 
 dist:
-	VERSION=$(CIRCLE_TAG) goxzst -d dist/gh/ -o "$(TARGET)" -t "kubectl-auth-proxy.rb auth-proxy.yaml" -- -ldflags "$(LDFLAGS)"
-	mv dist/gh/kubectl-auth-proxy.rb dist/
+	VERSION=$(CIRCLE_TAG) goxzst -d dist/gh/ -o "$(TARGET)" -t "kauthproxy.rb auth-proxy.yaml" -- -ldflags "$(LDFLAGS)"
+	mv dist/gh/kauthproxy.rb dist/
 
 release: dist
 	ghr -u "$(CIRCLE_PROJECT_USERNAME)" -r "$(CIRCLE_PROJECT_REPONAME)" "$(CIRCLE_TAG)" dist/gh/
-	ghcp -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -m "$(CIRCLE_TAG)" -C dist/ kubectl-auth-proxy.rb
+	ghcp -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -m "$(CIRCLE_TAG)" -C dist/ kauthproxy.rb
 
 clean:
 	-rm $(TARGET)

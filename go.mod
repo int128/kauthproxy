@@ -1,4 +1,4 @@
-module github.com/int128/kubectl-auth-proxy
+module github.com/int128/kauthproxy
 
 go 1.12
 

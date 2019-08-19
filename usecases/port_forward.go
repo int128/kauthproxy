@@ -11,7 +11,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/int128/kubectl-auth-proxy/reverseproxy"
+	"github.com/int128/kauthproxy/reverseproxy"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

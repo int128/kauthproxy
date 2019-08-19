@@ -1,4 +1,4 @@
-# kubectl-auth-proxy [![CircleCI](https://circleci.com/gh/int128/kubectl-auth-proxy.svg?style=shield)](https://circleci.com/gh/int128/kubectl-auth-proxy)
+# kauthproxy [![CircleCI](https://circleci.com/gh/int128/kauthproxy.svg?style=shield)](https://circleci.com/gh/int128/kauthproxy)
 
 This is a kubectl plugin of authentication proxy to a pod on Kubernetes.
 It consists from the reverse proxy and port forwarder.
