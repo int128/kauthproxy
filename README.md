@@ -3,8 +3,6 @@
 This is a kubectl plugin to forward a local port to a pod or service via authentication proxy.
 It gets a token from the credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)) and forwards requests to a pod or service with `Authorization: Bearer token` header.
 
-**Status**: alpha and not for production.
-
 Take a look at the concept:
 
 ```
@@ -22,8 +20,12 @@ Take a look at the concept:
 +--------------------------------+
 ```
 
+**Status**: alpha and not for production.
+
 
 ## Getting Started
+
+### Install
 
 You can install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kauthproxy/releases) as follows:
 
@@ -79,6 +81,12 @@ kubectl auth-proxy https://kibana
 ```
 
 Open http://localhost:8000 and you can access the Kibana with the token.
+
+
+## Known Issues
+
+- kauthproxy gets a token at startup but does not refresh it after expiration. TODO: refresh the token
+- kauthproxy always skips TLS verification for a pod. TODO: add a flag
 
 
 ## Usage
