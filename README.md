@@ -25,13 +25,26 @@ Take a look at the concept:
 
 ## Getting Started
 
-- Kubernetes Dashboard on Amazon EKS
-- Kubernetes Dashboard with OpenID Connect authentication
-- Kibana with OpenID Connect authentication
+You can install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kauthproxy/releases) as follows:
+
+```sh
+# Homebrew
+brew tap int128/kauthproxy
+brew install kauthproxy
+
+# Krew (TODO)
+kubectl krew install auth-proxy
+
+# GitHub Releases
+curl -LO https://github.com/int128/kauthproxy/releases/download/v0.1.0/kauthproxy_linux_amd64.zip
+unzip kauthproxy_linux_amd64.zip
+ln -s kauthproxy kubectl-auth_proxy
+```
+
 
 ### Kubernetes Dashboard on Amazon EKS
 
-You need to [configure the kubeconfig](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html) to use aws-iam-authenticator or `aws eks get-token`.
+You need to [configure the kubeconfig](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html) to use [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or `aws eks get-token`.
 
 To run an authentication proxy to the service:
 
@@ -44,7 +57,7 @@ Open http://localhost:8000 and you can access the Kubernetes Dashboard with the 
 
 ### Kubernetes Dashboard with OpenID Connect authentication
 
-You need to configure the kubeconfig to use [`kubectl oidc-login`](https://github.com/int128/kubelogin).
+You need to configure the kubeconfig to use [kubelogin](https://github.com/int128/kubelogin).
 
 Run the following command,
 
@@ -57,7 +70,7 @@ Open http://localhost:8000 and you can access the Kubernetes Dashboard with the 
 
 ### Kibana with OpenID Connect authentication
 
-You need to configure the kubeconfig to use [`kubectl oidc-login`](https://github.com/int128/kubelogin).
+You need to configure the kubeconfig to use [kubelogin](https://github.com/int128/kubelogin).
 
 Run the following command,
 
