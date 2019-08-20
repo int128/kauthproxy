@@ -1,7 +1,7 @@
 # kauthproxy [![CircleCI](https://circleci.com/gh/int128/kauthproxy.svg?style=shield)](https://circleci.com/gh/int128/kauthproxy)
 
-This is a kubectl plugin of authentication proxy to a pod on Kubernetes.
-It consists from the reverse proxy and port forwarder.
+This is a kubectl plugin to forward a local port to a pod or service via authentication proxy.
+It gets a token from the credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)) and forwards requests to a pod or service with `Authorization: Bearer token` header.
 
 **Status**: alpha and not for production.
 
@@ -13,10 +13,10 @@ Take a look at the concept:
 +--------------------------------+
   ↓ http://localhost:8000
 +--------------------------------+              +-----------------------------+
-| kubectl auth-proxy             | <-- TOKEN -- | client-go credential plugin |
+| kubectl auth-proxy             | <-- token -- | client-go credential plugin |
 +--------------------------------+              +-----------------------------+
   ↓ https://localhost:443
-  ↓ Authorization: Bearer TOKEN
+  ↓ Authorization: Bearer token
 +--------------------------------+
 | Kubernetes Dashboard (service) |
 +--------------------------------+
@@ -24,6 +24,10 @@ Take a look at the concept:
 
 
 ## Getting Started
+
+- Kubernetes Dashboard on Amazon EKS
+- Kubernetes Dashboard with OpenID Connect authentication
+- Kibana with OpenID Connect authentication
 
 ### Kubernetes Dashboard on Amazon EKS
 
@@ -99,3 +103,9 @@ Flags:
       --user string                    The name of the kubeconfig user to use
       --version                        version for kubectl
 ```
+
+
+## Contributions
+
+This is an open source software.
+Feel free to open issues and pull requests.
