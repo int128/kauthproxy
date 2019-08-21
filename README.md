@@ -85,7 +85,6 @@ Open http://localhost:8000 and you can access the Kibana with the token.
 
 ## Known Issues
 
-- kauthproxy gets a token at startup but does not refresh it after expiration. TODO: refresh the token
 - kauthproxy always skips TLS verification for a pod. TODO: add a flag
 
 
