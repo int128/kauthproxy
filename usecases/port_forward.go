@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"log"
 	"net"
@@ -17,8 +16,10 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/plugin/pkg/client/auth/exec"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/transport"
 	"k8s.io/client-go/transport/spdy"
 )
 
@@ -32,13 +33,6 @@ type PortForwardIn struct {
 func PortForward(ctx context.Context, in PortForwardIn) error {
 	cfg := in.Config
 
-	//TODO: token may expire?
-	var token string
-	cfg.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
-		return &snifferTransport{base: rt, gotToken: func(s string) {
-			token = s
-		}}
-	}
 	clientset, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return xerrors.Errorf("could not create a client: %w", err)
@@ -73,21 +67,17 @@ func PortForward(ctx context.Context, in PortForwardIn) error {
 	}
 
 	eg, ctx := errgroup.WithContext(ctx)
-	modifier := func(r *http.Request) {
-		r.Header.Set("Authorization", "Bearer "+token)
+	proxyTransport, err := newProxyTransport(in.Config)
+	if err != nil {
+		return xerrors.Errorf("could not create a transport for reverse proxy: %w", err)
 	}
 	reverseproxy.Start(ctx, eg,
 		reverseproxy.Source{Addr: in.LocalAddr},
 		reverseproxy.Target{
-			Transport: &http.Transport{
-				//TODO: set timeouts
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-			Scheme: in.RemoteURL.Scheme,
-			Port:   transitPort,
-		}, modifier)
+			Transport: proxyTransport,
+			Scheme:    in.RemoteURL.Scheme,
+			Port:      transitPort,
+		}, func(r *http.Request) {})
 	go func() {
 		<-ctx.Done()
 		close(stopChan)
@@ -102,6 +92,37 @@ func PortForward(ctx context.Context, in PortForwardIn) error {
 		return xerrors.Errorf("error while port-forwarding: %w", err)
 	}
 	return nil
+}
+
+func newProxyTransport(c *rest.Config) (http.RoundTripper, error) {
+	conf := &transport.Config{
+		BearerToken:     c.BearerToken,
+		BearerTokenFile: c.BearerTokenFile,
+		TLS: transport.TLSConfig{
+			Insecure: true,
+		},
+	}
+	if c.ExecProvider != nil {
+		provider, err := exec.GetAuthenticator(c.ExecProvider)
+		if err != nil {
+			return nil, err
+		}
+		if err := provider.UpdateTransportConfig(conf); err != nil {
+			return nil, err
+		}
+	}
+	if c.AuthProvider != nil {
+		provider, err := rest.GetAuthProvider(c.Host, c.AuthProvider, c.AuthConfigPersister)
+		if err != nil {
+			return nil, err
+		}
+		conf.Wrap(provider.WrapTransport)
+	}
+	t, err := transport.New(conf)
+	if err != nil {
+		return nil, xerrors.Errorf("could not create a transport: %w", err)
+	}
+	return t, nil
 }
 
 func resolvePodContainerPort(url *url.URL, clientset *kubernetes.Clientset, namespace string) (*v1.Pod, string, error) {
@@ -156,30 +177,4 @@ func findFreePort() (int, error) {
 		return 0, xerrors.Errorf("unknown type %T", l.Addr())
 	}
 	return addr.Port, nil
-}
-
-type snifferTransport struct {
-	base     http.RoundTripper
-	gotToken func(string)
-}
-
-func (t *snifferTransport) RoundTrip(r *http.Request) (*http.Response, error) {
-	authorization := r.Header.Get("authorization")
-	token := extractBearerToken(authorization)
-	if token != "" {
-		t.gotToken(token)
-	}
-	return t.base.RoundTrip(r)
-}
-
-func extractBearerToken(authorization string) string {
-	s := strings.SplitN(authorization, " ", 2)
-	if len(s) != 2 {
-		return ""
-	}
-	scheme, token := s[0], s[1]
-	if scheme != "Bearer" {
-		return ""
-	}
-	return token
 }
