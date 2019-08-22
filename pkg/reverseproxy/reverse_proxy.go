@@ -7,32 +7,42 @@ import (
 	"net/http"
 	"net/http/httputil"
 
+	"github.com/google/wire"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 )
 
-type Source struct {
+var Set = wire.NewSet(
+	wire.Struct(new(ReverseProxy), "*"),
+	wire.Bind(new(Interface), new(*ReverseProxy)),
+)
+
+type Interface interface {
+	Start(ctx context.Context, eg *errgroup.Group, local Local, remote Remote)
+}
+
+type ReverseProxy struct {
+}
+
+type Local struct {
 	Addr string
 }
 
-type Target struct {
+type Remote struct {
 	Transport http.RoundTripper
 	Scheme    string
 	Port      int
 }
 
-type Modifier func(r *http.Request)
-
-func Start(ctx context.Context, eg *errgroup.Group, source Source, target Target, modifier Modifier) {
+func (*ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, local Local, remote Remote) {
 	server := &http.Server{
-		Addr: source.Addr,
+		Addr: local.Addr,
 		Handler: &httputil.ReverseProxy{
-			Transport: target.Transport,
+			Transport: remote.Transport,
 			Director: func(r *http.Request) {
-				r.URL.Scheme = target.Scheme
-				r.URL.Host = fmt.Sprintf("localhost:%d", target.Port)
+				r.URL.Scheme = remote.Scheme
+				r.URL.Host = fmt.Sprintf("localhost:%d", remote.Port)
 				r.Host = ""
-				modifier(r)
 			},
 		},
 	}
@@ -50,7 +60,4 @@ func Start(ctx context.Context, eg *errgroup.Group, source Source, target Target
 		}
 		return nil
 	})
-}
-
-type ReverseProxy struct {
 }

@@ -10,7 +10,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/int128/kauthproxy/reverseproxy"
+	"github.com/google/wire"
+	"github.com/int128/kauthproxy/pkg/reverseproxy"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	"k8s.io/api/core/v1"
@@ -23,6 +24,19 @@ import (
 	"k8s.io/client-go/transport/spdy"
 )
 
+var Set = wire.NewSet(
+	wire.Struct(new(PortForward), "*"),
+	wire.Bind(new(PortForwardInterface), new(*PortForward)),
+)
+
+type PortForwardInterface interface {
+	Do(ctx context.Context, in PortForwardIn) error
+}
+
+type PortForward struct {
+	ReverseProxy reverseproxy.Interface
+}
+
 type PortForwardIn struct {
 	Config    *rest.Config
 	Namespace string
@@ -30,7 +44,7 @@ type PortForwardIn struct {
 	LocalAddr string
 }
 
-func PortForward(ctx context.Context, in PortForwardIn) error {
+func (u *PortForward) Do(ctx context.Context, in PortForwardIn) error {
 	cfg := in.Config
 
 	clientset, err := kubernetes.NewForConfig(cfg)
@@ -71,13 +85,13 @@ func PortForward(ctx context.Context, in PortForwardIn) error {
 	if err != nil {
 		return xerrors.Errorf("could not create a transport for reverse proxy: %w", err)
 	}
-	reverseproxy.Start(ctx, eg,
-		reverseproxy.Source{Addr: in.LocalAddr},
-		reverseproxy.Target{
+	u.ReverseProxy.Start(ctx, eg,
+		reverseproxy.Local{Addr: in.LocalAddr},
+		reverseproxy.Remote{
 			Transport: proxyTransport,
 			Scheme:    in.RemoteURL.Scheme,
 			Port:      transitPort,
-		}, func(r *http.Request) {})
+		})
 	go func() {
 		<-ctx.Done()
 		close(stopChan)

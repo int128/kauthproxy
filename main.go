@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/int128/kauthproxy/cmd"
+	"github.com/int128/kauthproxy/pkg/di"
 )
 
 var version = "v0.0.0"
@@ -23,5 +23,5 @@ func main() {
 		cancel()
 	}()
 
-	os.Exit(cmd.Run(ctx, os.Args, version))
+	os.Exit(di.NewCmd().Run(ctx, os.Args, version))
 }
