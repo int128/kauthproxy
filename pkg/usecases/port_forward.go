@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/int128/kauthproxy/reverseproxy"
+	"github.com/int128/kauthproxy/pkg/reverseproxy"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	"k8s.io/api/core/v1"

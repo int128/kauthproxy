@@ -6,7 +6,7 @@ import (
 	"net"
 	"net/url"
 
-	"github.com/int128/kauthproxy/usecases"
+	"github.com/int128/kauthproxy/pkg/usecases"
 	"github.com/spf13/cobra"
 	"golang.org/x/xerrors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"

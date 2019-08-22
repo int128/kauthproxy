@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/int128/kauthproxy/cmd"
+	"github.com/int128/kauthproxy/pkg/cmd"
 )
 
 var version = "v0.0.0"
