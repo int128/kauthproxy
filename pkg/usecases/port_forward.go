@@ -69,11 +69,14 @@ func (u *PortForward) Do(ctx context.Context, in PortForwardIn) error {
 		return xerrors.Errorf("could not create a transport for reverse proxy: %w", err)
 	}
 	u.ReverseProxy.Start(ctx, eg,
-		reverseproxy.Local{Addr: in.LocalAddr},
-		reverseproxy.Remote{
+		reverseproxy.Options{
 			Transport: proxyTransport,
-			Scheme:    in.RemoteURL.Scheme,
-			Port:      transitPort,
+			Source:    reverseproxy.Source{Address: in.LocalAddr},
+			Target: reverseproxy.Target{
+				Scheme: in.RemoteURL.Scheme,
+				Host:   "localhost",
+				Port:   transitPort,
+			},
 		})
 	if err := u.PortForwarder.Start(ctx, eg, portforwarder.Options{
 		Config: in.Config,
