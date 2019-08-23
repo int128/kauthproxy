@@ -17,12 +17,12 @@ import (
 func NewCmd() cmd.Interface {
 	reverseProxy := &reverseproxy.ReverseProxy{}
 	portForwarder := &portforwarder.PortForwarder{}
-	portForward := &usecases.PortForward{
+	authProxy := &usecases.AuthProxy{
 		ReverseProxy:  reverseProxy,
 		PortForwarder: portForwarder,
 	}
 	cmdCmd := &cmd.Cmd{
-		PortForward: portForward,
+		AuthProxy: authProxy,
 	}
 	return cmdCmd
 }

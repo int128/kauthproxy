@@ -23,7 +23,7 @@ type Interface interface {
 }
 
 type Cmd struct {
-	PortForward usecases.PortForwardInterface
+	AuthProxy usecases.AuthProxyInterface
 }
 
 func (cmd *Cmd) Run(ctx context.Context, osArgs []string, version string) int {
@@ -87,14 +87,14 @@ func (cmd *Cmd) runRootCmd(ctx context.Context, o rootCmdOptions, args []string)
 	if err != nil {
 		return xerrors.Errorf("could not determine the namespace: %w", err)
 	}
-	in := usecases.PortForwardIn{
+	authProxyOptions := usecases.AuthProxyOptions{
 		Config:    config,
 		Namespace: namespace,
 		RemoteURL: remoteURL,
 		LocalAddr: localAddr,
 	}
-	if err := cmd.PortForward.Do(ctx, in); err != nil {
-		return xerrors.Errorf("error while port forwarding: %w", err)
+	if err := cmd.AuthProxy.Do(ctx, authProxyOptions); err != nil {
+		return xerrors.Errorf("could not run an authentication proxy: %w", err)
 	}
 	return nil
 }

@@ -24,35 +24,38 @@ import (
 )
 
 var Set = wire.NewSet(
-	wire.Struct(new(PortForward), "*"),
-	wire.Bind(new(PortForwardInterface), new(*PortForward)),
+	wire.Struct(new(AuthProxy), "*"),
+	wire.Bind(new(AuthProxyInterface), new(*AuthProxy)),
 )
 
-type PortForwardInterface interface {
-	Do(ctx context.Context, in PortForwardIn) error
+type AuthProxyInterface interface {
+	Do(ctx context.Context, in AuthProxyOptions) error
 }
 
-type PortForward struct {
+// AuthProxy provides a use-case of authentication proxy.
+type AuthProxy struct {
 	ReverseProxy  reverseproxy.Interface
 	PortForwarder portforwarder.Interface
 }
 
-type PortForwardIn struct {
+// AuthProxyOptions represents an option of AuthProxy.
+type AuthProxyOptions struct {
 	Config    *rest.Config
 	Namespace string
 	RemoteURL *url.URL
 	LocalAddr string
 }
 
-func (u *PortForward) Do(ctx context.Context, in PortForwardIn) error {
-	cfg := in.Config
+// Do runs the use-case.
+func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
+	cfg := o.Config
 
 	clientset, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return xerrors.Errorf("could not create a client: %w", err)
 	}
 
-	pod, containerPort, err := resolvePodContainerPort(in.RemoteURL, clientset, in.Namespace)
+	pod, containerPort, err := resolvePodContainerPort(o.RemoteURL, clientset, o.Namespace)
 	if err != nil {
 		return xerrors.Errorf("could not resolve a pod: %w", err)
 	}
@@ -64,22 +67,22 @@ func (u *PortForward) Do(ctx context.Context, in PortForwardIn) error {
 	}
 
 	eg, ctx := errgroup.WithContext(ctx)
-	proxyTransport, err := newProxyTransport(in.Config)
+	proxyTransport, err := newProxyTransport(o.Config)
 	if err != nil {
 		return xerrors.Errorf("could not create a transport for reverse proxy: %w", err)
 	}
 	u.ReverseProxy.Start(ctx, eg,
 		reverseproxy.Options{
 			Transport: proxyTransport,
-			Source:    reverseproxy.Source{Address: in.LocalAddr},
+			Source:    reverseproxy.Source{Address: o.LocalAddr},
 			Target: reverseproxy.Target{
-				Scheme: in.RemoteURL.Scheme,
+				Scheme: o.RemoteURL.Scheme,
 				Host:   "localhost",
 				Port:   transitPort,
 			},
 		})
 	if err := u.PortForwarder.Start(ctx, eg, portforwarder.Options{
-		Config: in.Config,
+		Config: o.Config,
 		Source: portforwarder.Source{Port: transitPort},
 		Target: portforwarder.Target{
 			Pod:           pod,
