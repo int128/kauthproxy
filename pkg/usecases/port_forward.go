@@ -7,10 +7,11 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
+	"strconv"
 	"strings"
 
 	"github.com/google/wire"
+	"github.com/int128/kauthproxy/pkg/portforwarder"
 	"github.com/int128/kauthproxy/pkg/reverseproxy"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
@@ -19,9 +20,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/plugin/pkg/client/auth/exec"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport"
-	"k8s.io/client-go/transport/spdy"
 )
 
 var Set = wire.NewSet(
@@ -34,7 +33,8 @@ type PortForwardInterface interface {
 }
 
 type PortForward struct {
-	ReverseProxy reverseproxy.Interface
+	ReverseProxy  reverseproxy.Interface
+	PortForwarder portforwarder.Interface
 }
 
 type PortForwardIn struct {
@@ -57,27 +57,10 @@ func (u *PortForward) Do(ctx context.Context, in PortForwardIn) error {
 		return xerrors.Errorf("could not resolve a pod: %w", err)
 	}
 	log.Printf("Pod %s is %s", pod.Name, pod.Status.Phase)
-	portforwardURL, err := url.Parse(cfg.Host + pod.GetSelfLink() + "/portforward")
-	if err != nil {
-		return xerrors.Errorf("could not create a URL for portforward: %w", err)
-	}
-	log.Printf("Forwarder URL: %s", portforwardURL)
-
-	spdyTransport, upgrader, err := spdy.RoundTripperFor(cfg)
-	if err != nil {
-		return xerrors.Errorf("could not create a round tripper: %w", err)
-	}
-	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: spdyTransport}, http.MethodPost, portforwardURL)
 
 	transitPort, err := findFreePort()
 	if err != nil {
 		return xerrors.Errorf("could not allocate a local port: %w", err)
-	}
-	portNotation := fmt.Sprintf("%d:%s", transitPort, containerPort)
-	stopChan, readyChan := make(chan struct{}, 1), make(chan struct{})
-	forwarder, err := portforward.New(dialer, []string{portNotation}, stopChan, readyChan, os.Stdout, os.Stderr)
-	if err != nil {
-		return xerrors.Errorf("could not create a forwarder: %w", err)
 	}
 
 	eg, ctx := errgroup.WithContext(ctx)
@@ -92,16 +75,16 @@ func (u *PortForward) Do(ctx context.Context, in PortForwardIn) error {
 			Scheme:    in.RemoteURL.Scheme,
 			Port:      transitPort,
 		})
-	go func() {
-		<-ctx.Done()
-		close(stopChan)
-	}()
-	eg.Go(func() error {
-		if err := forwarder.ForwardPorts(); err != nil {
-			return xerrors.Errorf("error while running the forwarder: %w", err)
-		}
-		return nil
-	})
+	if err := u.PortForwarder.Start(ctx, eg, portforwarder.Options{
+		Config: in.Config,
+		Source: portforwarder.Source{Port: transitPort},
+		Target: portforwarder.Target{
+			Pod:           pod,
+			ContainerPort: containerPort,
+		},
+	}); err != nil {
+		return xerrors.Errorf("could not start a port forwarder: %w", err)
+	}
 	if err := eg.Wait(); err != nil {
 		return xerrors.Errorf("error while port-forwarding: %w", err)
 	}
@@ -139,14 +122,14 @@ func newProxyTransport(c *rest.Config) (http.RoundTripper, error) {
 	return t, nil
 }
 
-func resolvePodContainerPort(url *url.URL, clientset *kubernetes.Clientset, namespace string) (*v1.Pod, string, error) {
+func resolvePodContainerPort(url *url.URL, clientset *kubernetes.Clientset, namespace string) (*v1.Pod, int, error) {
 	hostname := url.Hostname()
 	var pod *v1.Pod
 	if strings.HasSuffix(hostname, ".svc") {
 		serviceName := strings.TrimSuffix(hostname, ".svc")
 		service, err := clientset.CoreV1().Services(namespace).Get(serviceName, metav1.GetOptions{})
 		if err != nil {
-			return nil, "", xerrors.Errorf("could not find the service: %w", err)
+			return nil, 0, xerrors.Errorf("could not find the service: %w", err)
 		}
 		log.Printf("Service %s found", service.Name)
 		var selectors []string
@@ -156,28 +139,32 @@ func resolvePodContainerPort(url *url.URL, clientset *kubernetes.Clientset, name
 		selector := strings.Join(selectors, ",")
 		pods, err := clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: selector})
 		if err != nil {
-			return nil, "", xerrors.Errorf("could not find the pods by selector %s: %w", selector, err)
+			return nil, 0, xerrors.Errorf("could not find the pods by selector %s: %w", selector, err)
 		}
 		if len(pods.Items) == 0 {
-			return nil, "", xerrors.Errorf("no pod matched to selector %s", selector)
+			return nil, 0, xerrors.Errorf("no pod matched to selector %s", selector)
 		}
 		pod = &pods.Items[0]
 	} else {
 		var err error
 		pod, err = clientset.CoreV1().Pods(namespace).Get(hostname, metav1.GetOptions{})
 		if err != nil {
-			return nil, "", xerrors.Errorf("could not find the pod: %w", err)
+			return nil, 0, xerrors.Errorf("could not find the pod: %w", err)
 		}
 	}
 	if url.Port() != "" {
-		return pod, url.Port(), nil
+		port, err := strconv.Atoi(url.Port())
+		if err != nil {
+			return nil, 0, xerrors.Errorf("invalid port number: %w", err)
+		}
+		return pod, port, nil
 	}
 	for _, container := range pod.Spec.Containers {
 		for _, port := range container.Ports {
-			return pod, fmt.Sprintf("%d", port.ContainerPort), nil
+			return pod, int(port.ContainerPort), nil
 		}
 	}
-	return nil, "", xerrors.Errorf("no container port found in the pod %s", pod.Name)
+	return nil, 0, xerrors.Errorf("no container port found in the pod %s", pod.Name)
 }
 
 func findFreePort() (int, error) {
