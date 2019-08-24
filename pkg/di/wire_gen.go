@@ -7,6 +7,9 @@ package di
 
 import (
 	"github.com/int128/kauthproxy/pkg/cmd"
+	"github.com/int128/kauthproxy/pkg/network"
+	"github.com/int128/kauthproxy/pkg/portforwarder"
+	"github.com/int128/kauthproxy/pkg/resolver"
 	"github.com/int128/kauthproxy/pkg/reverseproxy"
 	"github.com/int128/kauthproxy/pkg/usecases"
 )
@@ -15,11 +18,17 @@ import (
 
 func NewCmd() cmd.Interface {
 	reverseProxy := &reverseproxy.ReverseProxy{}
-	portForward := &usecases.PortForward{
-		ReverseProxy: reverseProxy,
+	portForwarder := &portforwarder.PortForwarder{}
+	factory := &resolver.Factory{}
+	networkNetwork := &network.Network{}
+	authProxy := &usecases.AuthProxy{
+		ReverseProxy:    reverseProxy,
+		PortForwarder:   portForwarder,
+		ResolverFactory: factory,
+		Network:         networkNetwork,
 	}
 	cmdCmd := &cmd.Cmd{
-		PortForward: portForward,
+		AuthProxy: authProxy,
 	}
 	return cmdCmd
 }

@@ -1,9 +1,9 @@
+// Package reverseproxy provides a reverse proxy.
 package reverseproxy
 
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httputil"
 
@@ -17,31 +17,43 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*ReverseProxy)),
 )
 
+//go:generate mockgen -destination mock_reverseproxy/mock_reverseproxy.go github.com/int128/kauthproxy/pkg/reverseproxy Interface
+
 type Interface interface {
-	Start(ctx context.Context, eg *errgroup.Group, local Local, remote Remote)
+	Start(ctx context.Context, eg *errgroup.Group, o Options)
 }
 
-type ReverseProxy struct {
-}
+// ReverseProxy provides a reverse proxy.
+type ReverseProxy struct{}
 
-type Local struct {
-	Addr string
-}
-
-type Remote struct {
+// Options represents an option of ReverseProxy.
+type Options struct {
 	Transport http.RoundTripper
-	Scheme    string
-	Port      int
+	Source    Source
+	Target    Target
 }
 
-func (*ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, local Local, remote Remote) {
+// Source represents a source of proxy.
+type Source struct {
+	Address string // local address to bind
+}
+
+// Target represents a target of proxy.
+type Target struct {
+	Scheme string
+	Host   string
+	Port   int
+}
+
+// Start starts a reverse proxy in goroutines.
+func (*ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, o Options) {
 	server := &http.Server{
-		Addr: local.Addr,
+		Addr: o.Source.Address,
 		Handler: &httputil.ReverseProxy{
-			Transport: remote.Transport,
+			Transport: o.Transport,
 			Director: func(r *http.Request) {
-				r.URL.Scheme = remote.Scheme
-				r.URL.Host = fmt.Sprintf("localhost:%d", remote.Port)
+				r.URL.Scheme = o.Target.Scheme
+				r.URL.Host = fmt.Sprintf("%s:%d", o.Target.Host, o.Target.Port)
 				r.Host = ""
 			},
 		},
@@ -54,7 +66,6 @@ func (*ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, local Local,
 	})
 	eg.Go(func() error {
 		<-ctx.Done()
-		log.Printf("Shutting down the server")
 		if err := server.Shutdown(ctx); err != nil {
 			return xerrors.Errorf("could not stop the server: %w", err)
 		}
