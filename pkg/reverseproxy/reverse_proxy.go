@@ -17,6 +17,8 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*ReverseProxy)),
 )
 
+//go:generate mockgen -destination mock_reverseproxy/mock_reverseproxy.go github.com/int128/kauthproxy/pkg/reverseproxy Interface
+
 type Interface interface {
 	Start(ctx context.Context, eg *errgroup.Group, o Options)
 }

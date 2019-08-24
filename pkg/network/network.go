@@ -16,6 +16,8 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*Network)),
 )
 
+//go:generate mockgen -destination mock_network/mock_network.go github.com/int128/kauthproxy/pkg/network Interface
+
 type Interface interface {
 	NewTransportWithToken(c *rest.Config) (http.RoundTripper, error)
 	AllocateLocalPort() (int, error)
