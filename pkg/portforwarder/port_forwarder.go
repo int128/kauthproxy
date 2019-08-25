@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/google/wire"
+	"github.com/int128/kauthproxy/pkg/logger"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
@@ -29,7 +30,9 @@ type Interface interface {
 }
 
 // PortForwarder provides port forwarding from a local port to a pod container port.
-type PortForwarder struct{}
+type PortForwarder struct {
+	Logger logger.Interface
+}
 
 // Options represents an option of PortForwarder.
 type Options struct {
@@ -69,13 +72,16 @@ func (pf *PortForwarder) Start(ctx context.Context, eg *errgroup.Group, o Option
 	}
 	eg.Go(func() error {
 		<-ctx.Done()
+		pf.Logger.V(1).Infof("stopping the port forwarder")
 		close(stopChan)
 		return nil
 	})
 	eg.Go(func() error {
+		pf.Logger.V(1).Infof("starting a port forwarder for %s", portPair)
 		if err := forwarder.ForwardPorts(); err != nil {
 			return xerrors.Errorf("could not run the forwarder: %w", err)
 		}
+		pf.Logger.V(1).Infof("stopped the port forwarder")
 		return nil
 	})
 	return nil

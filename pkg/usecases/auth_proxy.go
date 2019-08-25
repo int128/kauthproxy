@@ -2,11 +2,11 @@ package usecases
 
 import (
 	"context"
-	"log"
 	"net/url"
 	"strings"
 
 	"github.com/google/wire"
+	"github.com/int128/kauthproxy/pkg/logger"
 	"github.com/int128/kauthproxy/pkg/network"
 	"github.com/int128/kauthproxy/pkg/portforwarder"
 	"github.com/int128/kauthproxy/pkg/resolver"
@@ -32,6 +32,7 @@ type AuthProxy struct {
 	PortForwarder   portforwarder.Interface
 	ResolverFactory resolver.FactoryInterface
 	Network         network.Interface
+	Logger          logger.Interface
 }
 
 // AuthProxyOptions represents an option of AuthProxy.
@@ -52,15 +53,18 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 	if err != nil {
 		return xerrors.Errorf("could not find the pod and container port: %w", err)
 	}
+	u.Logger.V(1).Infof("found container port %d of pod %s", containerPort, pod.Name)
 	transitPort, err := u.Network.AllocateLocalPort()
 	if err != nil {
 		return xerrors.Errorf("could not allocate a local port: %w", err)
 	}
+	u.Logger.V(1).Infof("allocated port %d for transit", transitPort)
 	transport, err := u.Network.NewTransportWithToken(o.Config)
 	if err != nil {
 		return xerrors.Errorf("could not create a transport for reverse proxy: %w", err)
 	}
 
+	u.Logger.Printf("Open http://%s", o.LocalAddr)
 	eg, ctx := errgroup.WithContext(ctx)
 	u.ReverseProxy.Start(ctx, eg,
 		reverseproxy.Options{
@@ -83,7 +87,6 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 		}); err != nil {
 		return xerrors.Errorf("could not start a port forwarder: %w", err)
 	}
-	log.Printf("Open http://%s", o.LocalAddr)
 	if err := eg.Wait(); err != nil {
 		return xerrors.Errorf("error while port-forwarding: %w", err)
 	}

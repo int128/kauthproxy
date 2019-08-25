@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/wire"
+	"github.com/int128/kauthproxy/pkg/logger"
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,7 +16,7 @@ import (
 )
 
 var Set = wire.NewSet(
-	wire.Struct(new(Factory)),
+	wire.Struct(new(Factory), "*"),
 	wire.Bind(new(FactoryInterface), new(*Factory)),
 )
 
@@ -26,15 +27,20 @@ type FactoryInterface interface {
 }
 
 // Factory creates a Resolver.
-type Factory struct{}
+type Factory struct {
+	Logger logger.Interface
+}
 
 // New returns a Resolver.
-func (*Factory) New(config *rest.Config) (Interface, error) {
+func (f *Factory) New(config *rest.Config) (Interface, error) {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, xerrors.Errorf("could not create a client: %w", err)
 	}
-	return &Resolver{CoreV1: clientset.CoreV1()}, nil
+	return &Resolver{
+		Logger: f.Logger,
+		CoreV1: clientset.CoreV1(),
+	}, nil
 }
 
 type Interface interface {
@@ -44,11 +50,13 @@ type Interface interface {
 
 // Resolver provides resolving a pod and container port.
 type Resolver struct {
+	Logger logger.Interface
 	CoreV1 corev1.CoreV1Interface
 }
 
 // FindByServiceName returns a pod and container port associated with the service.
 func (r *Resolver) FindByServiceName(namespace, serviceName string) (*v1.Pod, int, error) {
+	r.Logger.V(1).Infof("finding service %s in namespace %s", serviceName, namespace)
 	service, err := r.CoreV1.Services(namespace).Get(serviceName, metav1.GetOptions{})
 	if err != nil {
 		return nil, 0, xerrors.Errorf("could not find the service: %w", err)
@@ -58,32 +66,40 @@ func (r *Resolver) FindByServiceName(namespace, serviceName string) (*v1.Pod, in
 		selectors = append(selectors, fmt.Sprintf("%s=%s", k, v))
 	}
 	selector := strings.Join(selectors, ",")
+	r.Logger.V(1).Infof("finding pods by selector %s", selectors)
 	pods, err := r.CoreV1.Pods(namespace).List(metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
 		return nil, 0, xerrors.Errorf("could not find pods by selector %s: %w", selector, err)
 	}
+	r.Logger.V(1).Infof("found %d pod(s)", len(pods.Items))
 	if len(pods.Items) == 0 {
 		return nil, 0, xerrors.Errorf("no pod matched to selector %s", selector)
 	}
 	pod := &pods.Items[0]
+	r.Logger.V(1).Infof("first matched pod %s", pod.Name)
 	for _, container := range pod.Spec.Containers {
 		for _, port := range container.Ports {
+			r.Logger.V(1).Infof("found container port %d in container %s of pod %s",
+				port.ContainerPort, container.Name, pod.Name)
 			return pod, int(port.ContainerPort), nil
 		}
 	}
-	return nil, 0, xerrors.Errorf("no container port in the pod %s", pod.Name)
+	return nil, 0, xerrors.Errorf("no container port in pod %s", pod.Name)
 }
 
 // FindByPodName finds a pod and container port by name.
 func (r *Resolver) FindByPodName(namespace, podName string) (*v1.Pod, int, error) {
+	r.Logger.V(1).Infof("finding pod %s in namespace %s", podName, namespace)
 	pod, err := r.CoreV1.Pods(namespace).Get(podName, metav1.GetOptions{})
 	if err != nil {
 		return nil, 0, xerrors.Errorf("could not find the pod: %w", err)
 	}
 	for _, container := range pod.Spec.Containers {
 		for _, port := range container.Ports {
+			r.Logger.V(1).Infof("found container port %d in container %s of pod %s",
+				port.ContainerPort, container.Name, pod.Name)
 			return pod, int(port.ContainerPort), nil
 		}
 	}
-	return nil, 0, xerrors.Errorf("no container port in the pod %s", pod.Name)
+	return nil, 0, xerrors.Errorf("no container port in pod %s", pod.Name)
 }

@@ -8,6 +8,7 @@ import (
 	"net/http/httputil"
 
 	"github.com/google/wire"
+	"github.com/int128/kauthproxy/pkg/logger"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 )
@@ -24,7 +25,9 @@ type Interface interface {
 }
 
 // ReverseProxy provides a reverse proxy.
-type ReverseProxy struct{}
+type ReverseProxy struct {
+	Logger logger.Interface
+}
 
 // Options represents an option of ReverseProxy.
 type Options struct {
@@ -46,7 +49,7 @@ type Target struct {
 }
 
 // Start starts a reverse proxy in goroutines.
-func (*ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, o Options) {
+func (rp *ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, o Options) {
 	server := &http.Server{
 		Addr: o.Source.Address,
 		Handler: &httputil.ReverseProxy{
@@ -59,15 +62,18 @@ func (*ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, o Options) {
 		},
 	}
 	eg.Go(func() error {
+		rp.Logger.V(1).Infof("starting a reverse proxy for %s -> %s:%d", o.Source.Address, o.Target.Host, o.Target.Port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			return xerrors.Errorf("could not start a server: %w", err)
+			return xerrors.Errorf("could not start a reverse proxy: %w", err)
 		}
+		rp.Logger.V(1).Infof("stopped the reverse proxy")
 		return nil
 	})
 	eg.Go(func() error {
 		<-ctx.Done()
+		rp.Logger.V(1).Infof("stopping the reverse proxy")
 		if err := server.Shutdown(ctx); err != nil {
-			return xerrors.Errorf("could not stop the server: %w", err)
+			return xerrors.Errorf("could not stop the reverse proxy: %w", err)
 		}
 		return nil
 	})
