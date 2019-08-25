@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kauthproxy/pkg/logger/mock_logger"
 	"github.com/int128/kauthproxy/pkg/network/mock_network"
 	"github.com/int128/kauthproxy/pkg/portforwarder"
 	"github.com/int128/kauthproxy/pkg/portforwarder/mock_portforwarder"
@@ -71,6 +72,7 @@ func TestAuthProxy_Do(t *testing.T) {
 			PortForwarder:   portForwarder,
 			ResolverFactory: resolverFactory,
 			Network:         mockNetwork,
+			Logger:          mock_logger.New(t),
 		}
 		o := AuthProxyOptions{
 			Config:    c,
@@ -133,6 +135,7 @@ func TestAuthProxy_Do(t *testing.T) {
 			PortForwarder:   portForwarder,
 			ResolverFactory: resolverFactory,
 			Network:         mockNetwork,
+			Logger:          mock_logger.New(t),
 		}
 		o := AuthProxyOptions{
 			Config:    c,

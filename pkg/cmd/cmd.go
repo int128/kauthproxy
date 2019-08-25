@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"context"
-	"log"
 	"net"
 	"net/url"
 
 	"github.com/google/wire"
+	"github.com/int128/kauthproxy/pkg/logger"
 	"github.com/int128/kauthproxy/pkg/usecases"
 	"github.com/spf13/cobra"
 	"golang.org/x/xerrors"
@@ -24,6 +24,7 @@ type Interface interface {
 
 type Cmd struct {
 	AuthProxy usecases.AuthProxyInterface
+	Logger    logger.Interface
 }
 
 func (cmd *Cmd) Run(ctx context.Context, osArgs []string, version string) int {
@@ -34,7 +35,7 @@ func (cmd *Cmd) Run(ctx context.Context, osArgs []string, version string) int {
 
 	rootCmd.SetArgs(osArgs[1:])
 	if err := rootCmd.Execute(); err != nil {
-		log.Printf("error: %s", err)
+		cmd.Logger.Printf("error: %s", err)
 		return 1
 	}
 	return 0
@@ -64,6 +65,7 @@ LOCAL_ADDR defaults to localhost:8000.
 		},
 	}
 	o.ConfigFlags.AddFlags(c.Flags())
+	cmd.Logger.AddFlags(c.PersistentFlags())
 	return c
 }
 
