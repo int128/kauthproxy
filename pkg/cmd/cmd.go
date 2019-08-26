@@ -59,12 +59,18 @@ func (cmd *Cmd) newRootCmd(ctx context.Context) *cobra.Command {
 	o.k8sOptions = genericclioptions.NewConfigFlags(false)
 	c := &cobra.Command{
 		Use:   "kubectl auth-proxy POD_OR_SERVICE_URL",
-		Short: "Forward a local port to a pod or service via authentication proxy",
-		Long: `Forward a local port to a pod or service via authentication proxy.
-To forward a local port to a service, set a service name with .svc suffix. e.g. http://service-name.svc
-To forward a local port to a pod, set a pod name. e.g. http://pod-name`,
-		Example: `  kubectl auth-proxy https://kubernetes-dashboard.svc`,
-		Args:    cobra.ExactArgs(1),
+		Short: "Forward a local port to a pod or service via the authentication proxy",
+		Long: `Forward a local port to a pod or service via the authentication proxy.
+It gets a token from the current credential plugin (e.g. EKS, OpenID Connect).
+Then it appends the authorization header to HTTP requests, like "authorization: Bearer token".
+All traffic is routed by the authentication proxy and port forwarder as follows:
+  [browser] -> [authentication proxy] -> [port forwarder] -> [pod]`,
+		Example: `  # To access a service:
+  kubectl auth-proxy https://kubernetes-dashboard.svc
+
+  # To access a pod:
+  kubectl auth-proxy https://kubernetes-dashboard-57fc4fcb74-jjg77`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			return cmd.runRootCmd(ctx, o, args)
 		},
