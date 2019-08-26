@@ -4,6 +4,7 @@ package reverseproxy
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httputil"
 
@@ -21,7 +22,7 @@ var Set = wire.NewSet(
 //go:generate mockgen -destination mock_reverseproxy/mock_reverseproxy.go github.com/int128/kauthproxy/pkg/reverseproxy Interface
 
 type Interface interface {
-	Start(ctx context.Context, eg *errgroup.Group, o Options)
+	Start(ctx context.Context, eg *errgroup.Group, o Options) (string, error)
 }
 
 // ReverseProxy provides a reverse proxy.
@@ -48,10 +49,9 @@ type Target struct {
 	Port   int
 }
 
-// Start starts a reverse proxy in goroutines.
-func (rp *ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, o Options) {
+// Start starts a reverse proxy in goroutines and returns the bound address.
+func (rp *ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, o Options) (string, error) {
 	server := &http.Server{
-		Addr: o.Source.Address,
 		Handler: &httputil.ReverseProxy{
 			Transport: o.Transport,
 			Director: func(r *http.Request) {
@@ -61,9 +61,14 @@ func (rp *ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, o Options
 			},
 		},
 	}
+
+	listener, err := net.Listen("tcp", o.Source.Address)
+	if err != nil {
+		return "", xerrors.Errorf("could not bind address %s: %w", o.Source.Address, err)
+	}
 	eg.Go(func() error {
 		rp.Logger.V(1).Infof("starting a reverse proxy for %s -> %s:%d", o.Source.Address, o.Target.Host, o.Target.Port)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {
 			return xerrors.Errorf("could not start a reverse proxy: %w", err)
 		}
 		rp.Logger.V(1).Infof("stopped the reverse proxy")
@@ -77,4 +82,5 @@ func (rp *ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, o Options
 		}
 		return nil
 	})
+	return listener.Addr().String(), nil
 }

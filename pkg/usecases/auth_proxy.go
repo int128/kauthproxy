@@ -64,9 +64,8 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 		return xerrors.Errorf("could not create a transport for reverse proxy: %w", err)
 	}
 
-	u.Logger.Printf("Open http://%s", o.LocalAddr)
 	eg, ctx := errgroup.WithContext(ctx)
-	u.ReverseProxy.Start(ctx, eg,
+	localAddress, err := u.ReverseProxy.Start(ctx, eg,
 		reverseproxy.Options{
 			Transport: transport,
 			Source:    reverseproxy.Source{Address: o.LocalAddr},
@@ -76,6 +75,9 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 				Port:   transitPort,
 			},
 		})
+	if err != nil {
+		return xerrors.Errorf("could not start a reverse proxy: %w", err)
+	}
 	if err := u.PortForwarder.Start(ctx, eg,
 		portforwarder.Options{
 			Config: o.Config,
@@ -87,6 +89,8 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 		}); err != nil {
 		return xerrors.Errorf("could not start a port forwarder: %w", err)
 	}
+	u.Logger.Printf("Open http://%s", localAddress)
+
 	if err := eg.Wait(); err != nil {
 		return xerrors.Errorf("error while port-forwarding: %w", err)
 	}
