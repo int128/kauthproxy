@@ -36,8 +36,11 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 }
 
 // Start mocks base method
-func (m *MockInterface) Start(arg0 context.Context, arg1 *errgroup.Group, arg2 reverseproxy.Options) {
-	m.ctrl.Call(m, "Start", arg0, arg1, arg2)
+func (m *MockInterface) Start(arg0 context.Context, arg1 *errgroup.Group, arg2 reverseproxy.Options) (string, error) {
+	ret := m.ctrl.Call(m, "Start", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Start indicates an expected call of Start

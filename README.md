@@ -9,7 +9,7 @@ Take a look at the concept:
 +--------------------------------+
 | Browser                        |
 +--------------------------------+
-  ↓ http://localhost:8000
+  ↓ http://localhost:random_port
 +--------------------------------+              +-----------------------------+
 | kubectl auth-proxy             | <-- token -- | client-go credential plugin |
 +--------------------------------+              +-----------------------------+
@@ -50,11 +50,15 @@ You need to [configure the kubeconfig](https://docs.aws.amazon.com/eks/latest/us
 
 To run an authentication proxy to the service:
 
-```sh
-kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
+```
+% kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
+Starting an authentication proxy for pod/kubernetes-dashboard-57fc4fcb74-jjg77:8443
+Open http://127.0.0.1:57867
+Forwarding from 127.0.0.1:57866 -> 8443
+Forwarding from [::1]:57866 -> 8443
 ```
 
-Open http://localhost:8000 and you can access the Kubernetes Dashboard with the token.
+Open the URL and you can access the Kubernetes Dashboard with the token.
 
 
 ### Kubernetes Dashboard with OpenID Connect authentication
@@ -63,11 +67,15 @@ You need to configure the kubeconfig to use [kubelogin](https://github.com/int12
 
 Run the following command,
 
-```sh
-kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
+```
+% kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
+Starting an authentication proxy for pod/kubernetes-dashboard-57fc4fcb74-jjg77:8443
+Open http://127.0.0.1:57867
+Forwarding from 127.0.0.1:57866 -> 8443
+Forwarding from [::1]:57866 -> 8443
 ```
 
-Open http://localhost:8000 and you can access the Kubernetes Dashboard with the token.
+Open the URL and you can access the Kubernetes Dashboard with the token.
 
 
 ### Kibana with OpenID Connect authentication
@@ -76,11 +84,15 @@ You need to configure the kubeconfig to use [kubelogin](https://github.com/int12
 
 Run the following command,
 
-```sh
-kubectl auth-proxy https://kibana
+```
+% kubectl auth-proxy https://kibana
+Starting an authentication proxy for pod/kibana-57fc4fcb74-jjg77:8443
+Open http://127.0.0.1:57867
+Forwarding from 127.0.0.1:57866 -> 8443
+Forwarding from [::1]:57866 -> 8443
 ```
 
-Open http://localhost:8000 and you can access the Kibana with the token.
+Open the URL and you can access the Kibana with the token.
 
 
 ## Known Issues
@@ -92,36 +104,45 @@ Open http://localhost:8000 and you can access the Kibana with the token.
 
 ```
 Forward a local port to a pod or service via authentication proxy.
-
 To forward a local port to a service, set a service name with .svc suffix. e.g. http://service-name.svc
 To forward a local port to a pod, set a pod name. e.g. http://pod-name
 
-LOCAL_ADDR defaults to localhost:8000.
-
 Usage:
-  kubectl auth-proxy REMOTE_URL [LOCAL_ADDR] [flags]
+  kubectl auth-proxy POD_OR_SERVICE_URL [flags]
 
 Examples:
   kubectl auth-proxy https://kubernetes-dashboard.svc
 
 Flags:
-      --as string                      Username to impersonate for the operation
-      --as-group stringArray           Group to impersonate for the operation, this flag can be repeated to specify multiple groups.
-      --cache-dir string               Default HTTP cache directory (default "~/.kube/http-cache")
-      --certificate-authority string   Path to a cert file for the certificate authority
-      --client-certificate string      Path to a client certificate file for TLS
-      --client-key string              Path to a client key file for TLS
-      --cluster string                 The name of the kubeconfig cluster to use
-      --context string                 The name of the kubeconfig context to use
-  -h, --help                           help for kubectl
-      --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
-      --kubeconfig string              Path to the kubeconfig file to use for CLI requests.
-  -n, --namespace string               If present, the namespace scope for this CLI request
-      --request-timeout string         The length of time to wait before giving up on a single server request. Non-zero values should contain a corresponding time unit (e.g. 1s, 2m, 3h). A value of zero means don't timeout requests. (default "0")
-  -s, --server string                  The address and port of the Kubernetes API server
-      --token string                   Bearer token for authentication to the API server
-      --user string                    The name of the kubeconfig user to use
-      --version                        version for kubectl
+      --address string                   The address on which to run the proxy. Default to a random port of localhost. (default "localhost:0")
+      --alsologtostderr                  log to standard error as well as files
+      --as string                        Username to impersonate for the operation
+      --as-group stringArray             Group to impersonate for the operation, this flag can be repeated to specify multiple groups.
+      --cache-dir string                 Default HTTP cache directory (default "~/.kube/http-cache")
+      --certificate-authority string     Path to a cert file for the certificate authority
+      --client-certificate string        Path to a client certificate file for TLS
+      --client-key string                Path to a client key file for TLS
+      --cluster string                   The name of the kubeconfig cluster to use
+      --context string                   The name of the kubeconfig context to use
+  -h, --help                             help for kubectl
+      --insecure-skip-tls-verify         If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
+      --kubeconfig string                Path to the kubeconfig file to use for CLI requests.
+      --log_backtrace_at traceLocation   when logging hits line file:N, emit a stack trace (default :0)
+      --log_dir string                   If non-empty, write log files in this directory
+      --log_file string                  If non-empty, use this log file
+      --log_file_max_size uint           Defines the maximum size a log file can grow to. Unit is megabytes. If the value is 0, the maximum file size is unlimited. (default 1800)
+      --logtostderr                      log to standard error instead of files (default true)
+  -n, --namespace string                 If present, the namespace scope for this CLI request
+      --request-timeout string           The length of time to wait before giving up on a single server request. Non-zero values should contain a corresponding time unit (e.g. 1s, 2m, 3h). A value of zero means don't timeout requests. (default "0")
+  -s, --server string                    The address and port of the Kubernetes API server
+      --skip_headers                     If true, avoid header prefixes in the log messages
+      --skip_log_headers                 If true, avoid headers when opening log files
+      --stderrthreshold severity         logs at or above this threshold go to stderr (default 2)
+      --token string                     Bearer token for authentication to the API server
+      --user string                      The name of the kubeconfig user to use
+  -v, --v Level                          number for the log level verbosity
+      --version                          version for kubectl
+      --vmodule moduleSpec               comma-separated list of pattern=N settings for file-filtered logging
 ```
 
 

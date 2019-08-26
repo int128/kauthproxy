@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"context"
-	"net"
 	"net/url"
 
 	"github.com/google/wire"
 	"github.com/int128/kauthproxy/pkg/logger"
 	"github.com/int128/kauthproxy/pkg/usecases"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"golang.org/x/xerrors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
@@ -42,29 +42,31 @@ func (cmd *Cmd) Run(ctx context.Context, osArgs []string, version string) int {
 }
 
 type rootCmdOptions struct {
-	*genericclioptions.ConfigFlags
+	k8sOptions *genericclioptions.ConfigFlags
+	address    string
+}
+
+func (o *rootCmdOptions) addFlags(f *pflag.FlagSet) {
+	o.k8sOptions.AddFlags(f)
+	f.StringVar(&o.address, "address", "localhost:0", "The address on which to run the proxy. Default to a random port of localhost.")
 }
 
 func (cmd *Cmd) newRootCmd(ctx context.Context) *cobra.Command {
 	var o rootCmdOptions
-	o.ConfigFlags = genericclioptions.NewConfigFlags(false)
+	o.k8sOptions = genericclioptions.NewConfigFlags(false)
 	c := &cobra.Command{
-		Use:   "kubectl auth-proxy REMOTE_URL [LOCAL_ADDR]",
+		Use:   "kubectl auth-proxy POD_OR_SERVICE_URL",
 		Short: "Forward a local port to a pod or service via authentication proxy",
 		Long: `Forward a local port to a pod or service via authentication proxy.
-
 To forward a local port to a service, set a service name with .svc suffix. e.g. http://service-name.svc
-To forward a local port to a pod, set a pod name. e.g. http://pod-name
-
-LOCAL_ADDR defaults to localhost:8000.
-`,
+To forward a local port to a pod, set a pod name. e.g. http://pod-name`,
 		Example: `  kubectl auth-proxy https://kubernetes-dashboard.svc`,
-		Args:    cobra.RangeArgs(1, 2),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			return cmd.runRootCmd(ctx, o, args)
 		},
 	}
-	o.ConfigFlags.AddFlags(c.Flags())
+	o.addFlags(c.Flags())
 	cmd.Logger.AddFlags(c.PersistentFlags())
 	return c
 }
@@ -74,26 +76,19 @@ func (cmd *Cmd) runRootCmd(ctx context.Context, o rootCmdOptions, args []string)
 	if err != nil {
 		return xerrors.Errorf("invalid remote URL: %w", err)
 	}
-	localAddr := "localhost:8000"
-	if len(args) == 2 {
-		if _, _, err := net.SplitHostPort(args[1]); err != nil {
-			return xerrors.Errorf("invalid local address: %w", err)
-		}
-		localAddr = args[1]
-	}
-	config, err := o.ConfigFlags.ToRESTConfig()
+	config, err := o.k8sOptions.ToRESTConfig()
 	if err != nil {
 		return xerrors.Errorf("could not load the config: %w", err)
 	}
-	namespace, _, err := o.ConfigFlags.ToRawKubeConfigLoader().Namespace()
+	namespace, _, err := o.k8sOptions.ToRawKubeConfigLoader().Namespace()
 	if err != nil {
 		return xerrors.Errorf("could not determine the namespace: %w", err)
 	}
 	authProxyOptions := usecases.AuthProxyOptions{
-		Config:    config,
-		Namespace: namespace,
-		RemoteURL: remoteURL,
-		LocalAddr: localAddr,
+		Config:      config,
+		Namespace:   namespace,
+		TargetURL:   remoteURL,
+		BindAddress: o.address,
 	}
 	if err := cmd.AuthProxy.Do(ctx, authProxyOptions); err != nil {
 		return xerrors.Errorf("could not run an authentication proxy: %w", err)

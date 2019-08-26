@@ -37,10 +37,10 @@ type AuthProxy struct {
 
 // AuthProxyOptions represents an option of AuthProxy.
 type AuthProxyOptions struct {
-	Config    *rest.Config
-	Namespace string
-	RemoteURL *url.URL
-	LocalAddr string
+	Config      *rest.Config
+	Namespace   string
+	TargetURL   *url.URL
+	BindAddress string
 }
 
 // Do runs the use-case.
@@ -49,7 +49,7 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 	if err != nil {
 		return xerrors.Errorf("could not create a resolver: %w", err)
 	}
-	pod, containerPort, err := parseRemoteURL(rsv, o.Namespace, o.RemoteURL)
+	pod, containerPort, err := parseTargetURL(rsv, o.Namespace, o.TargetURL)
 	if err != nil {
 		return xerrors.Errorf("could not find the pod and container port: %w", err)
 	}
@@ -64,18 +64,20 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 		return xerrors.Errorf("could not create a transport for reverse proxy: %w", err)
 	}
 
-	u.Logger.Printf("Open http://%s", o.LocalAddr)
 	eg, ctx := errgroup.WithContext(ctx)
-	u.ReverseProxy.Start(ctx, eg,
+	bindAddress, err := u.ReverseProxy.Start(ctx, eg,
 		reverseproxy.Options{
 			Transport: transport,
-			Source:    reverseproxy.Source{Address: o.LocalAddr},
+			Source:    reverseproxy.Source{Address: o.BindAddress},
 			Target: reverseproxy.Target{
-				Scheme: o.RemoteURL.Scheme,
+				Scheme: o.TargetURL.Scheme,
 				Host:   "localhost",
 				Port:   transitPort,
 			},
 		})
+	if err != nil {
+		return xerrors.Errorf("could not start a reverse proxy: %w", err)
+	}
 	if err := u.PortForwarder.Start(ctx, eg,
 		portforwarder.Options{
 			Config: o.Config,
@@ -87,13 +89,16 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 		}); err != nil {
 		return xerrors.Errorf("could not start a port forwarder: %w", err)
 	}
+	u.Logger.Printf("Starting an authentication proxy for pod/%s:%d", pod.Name, containerPort)
+	u.Logger.Printf("Open http://%s", bindAddress)
+
 	if err := eg.Wait(); err != nil {
-		return xerrors.Errorf("error while port-forwarding: %w", err)
+		return xerrors.Errorf("error while running the authentication proxy: %w", err)
 	}
 	return nil
 }
 
-func parseRemoteURL(r resolver.Interface, namespace string, u *url.URL) (*v1.Pod, int, error) {
+func parseTargetURL(r resolver.Interface, namespace string, u *url.URL) (*v1.Pod, int, error) {
 	h := u.Hostname()
 	if strings.HasSuffix(h, ".svc") {
 		serviceName := strings.TrimSuffix(h, ".svc")
