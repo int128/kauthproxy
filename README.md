@@ -1,26 +1,31 @@
 # kauthproxy [![CircleCI](https://circleci.com/gh/int128/kauthproxy.svg?style=shield)](https://circleci.com/gh/int128/kauthproxy)
 
-This is a kubectl plugin to forward a local port to a pod or service via authentication proxy.
-It gets a token from the credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)) and forwards requests to a pod or service with `Authorization: Bearer token` header.
+This is a kubectl plugin to forward a local port to a pod or service via the authentication proxy.
+It gets a token from the current credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)).
+Then it appends the authorization header to HTTP requests, like `authorization: Bearer token`.
 
-Take a look at the concept:
+All traffic is routed by the authentication proxy and port forwarder as follows:
 
 ```
-+--------------------------------+
-| Browser                        |
-+--------------------------------+
++-----------------------------------+
+| Browser                           |
++-----------------------------------+
   ↓ http://localhost:random_port
-+--------------------------------+              +-----------------------------+
-| kubectl auth-proxy             | <-- token -- | client-go credential plugin |
-+--------------------------------+              +-----------------------------+
-  ↓ https://localhost:443
++-----------------------------------+              +-----------------------------+
+| Authentication proxy              | <-- token -- | client-go credential plugin |
++-----------------------------------+              +-----------------------------+
+  ↓ http://localhost:random_port
   ↓ Authorization: Bearer token
-+--------------------------------+
-| Kubernetes Dashboard (service) |
-+--------------------------------+
++-----------------------------------+
+| Port forwarder                    |
++-----------------------------------+
+  ↓ http://localhost:container_port
++-----------------------------------+
+| Pod                               |
++-----------------------------------+
 ```
 
-**Status**: alpha and not for production.
+**Status**: Alpha. Specification may be changed in the future.
 
 
 ## Getting Started
@@ -48,7 +53,7 @@ ln -s kauthproxy kubectl-auth_proxy
 
 You need to [configure the kubeconfig](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html) to use [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or `aws eks get-token`.
 
-To run an authentication proxy to the service:
+To access the Kubernetes Dashboard service:
 
 ```
 % kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
@@ -65,7 +70,7 @@ Open the URL and you can access the Kubernetes Dashboard with the token.
 
 You need to configure the kubeconfig to use [kubelogin](https://github.com/int128/kubelogin).
 
-Run the following command,
+To access the Kubernetes Dashboard service:
 
 ```
 % kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
@@ -78,21 +83,13 @@ Forwarding from [::1]:57866 -> 8443
 Open the URL and you can access the Kubernetes Dashboard with the token.
 
 
-### Kibana with OpenID Connect authentication
+### Other applications with OpenID Connect authentication
 
-You need to configure the kubeconfig to use [kubelogin](https://github.com/int128/kubelogin).
+You can access other applications with OpenID Connect authentication by the same way.
+For example,
 
-Run the following command,
-
-```
-% kubectl auth-proxy https://kibana
-Starting an authentication proxy for pod/kibana-57fc4fcb74-jjg77:8443
-Open http://127.0.0.1:57867
-Forwarding from 127.0.0.1:57866 -> 8443
-Forwarding from [::1]:57866 -> 8443
-```
-
-Open the URL and you can access the Kibana with the token.
+- Kibana
+- Grafana
 
 
 ## Known Issues
@@ -103,15 +100,21 @@ Open the URL and you can access the Kibana with the token.
 ## Usage
 
 ```
-Forward a local port to a pod or service via authentication proxy.
-To forward a local port to a service, set a service name with .svc suffix. e.g. http://service-name.svc
-To forward a local port to a pod, set a pod name. e.g. http://pod-name
+Forward a local port to a pod or service via the authentication proxy.
+It gets a token from the current credential plugin (e.g. EKS, OpenID Connect).
+Then it appends the authorization header to HTTP requests, like "authorization: Bearer token".
+All traffic is routed by the authentication proxy and port forwarder as follows:
+  [browser] -> [authentication proxy] -> [port forwarder] -> [pod]
 
 Usage:
   kubectl auth-proxy POD_OR_SERVICE_URL [flags]
 
 Examples:
+  # To access a service:
   kubectl auth-proxy https://kubernetes-dashboard.svc
+
+  # To access a pod:
+  kubectl auth-proxy https://kubernetes-dashboard-57fc4fcb74-jjg77
 
 Flags:
       --address string                   The address on which to run the proxy. Default to a random port of localhost. (default "localhost:0")
