@@ -85,10 +85,10 @@ func (cmd *Cmd) runRootCmd(ctx context.Context, o rootCmdOptions, args []string)
 		return xerrors.Errorf("could not determine the namespace: %w", err)
 	}
 	authProxyOptions := usecases.AuthProxyOptions{
-		Config:    config,
-		Namespace: namespace,
-		RemoteURL: remoteURL,
-		LocalAddr: o.address,
+		Config:      config,
+		Namespace:   namespace,
+		TargetURL:   remoteURL,
+		BindAddress: o.address,
 	}
 	if err := cmd.AuthProxy.Do(ctx, authProxyOptions); err != nil {
 		return xerrors.Errorf("could not run an authentication proxy: %w", err)

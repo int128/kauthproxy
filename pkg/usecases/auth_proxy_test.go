@@ -75,10 +75,10 @@ func TestAuthProxy_Do(t *testing.T) {
 			Logger:          mock_logger.New(t),
 		}
 		o := AuthProxyOptions{
-			Config:    c,
-			Namespace: "NAMESPACE",
-			RemoteURL: parseURL(t, "https://podname"),
-			LocalAddr: "localhost:8888",
+			Config:      c,
+			Namespace:   "NAMESPACE",
+			TargetURL:   parseURL(t, "https://podname"),
+			BindAddress: "localhost:8888",
 		}
 		if err := u.Do(context.Background(), o); err != nil {
 			t.Errorf("err wants nil but was %+v", err)
@@ -138,10 +138,10 @@ func TestAuthProxy_Do(t *testing.T) {
 			Logger:          mock_logger.New(t),
 		}
 		o := AuthProxyOptions{
-			Config:    c,
-			Namespace: "NAMESPACE",
-			RemoteURL: parseURL(t, "https://servicename.svc"),
-			LocalAddr: "localhost:9999",
+			Config:      c,
+			Namespace:   "NAMESPACE",
+			TargetURL:   parseURL(t, "https://servicename.svc"),
+			BindAddress: "localhost:9999",
 		}
 		if err := u.Do(context.Background(), o); err != nil {
 			t.Errorf("err wants nil but was %+v", err)

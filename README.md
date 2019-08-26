@@ -52,9 +52,10 @@ To run an authentication proxy to the service:
 
 ```
 % kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
-Open http://127.0.0.1:57777
-Forwarding from 127.0.0.1:57776 -> 8443
-Forwarding from [::1]:57776 -> 8443
+Starting an authentication proxy for pod/kubernetes-dashboard-57fc4fcb74-jjg77:8443
+Open http://127.0.0.1:57867
+Forwarding from 127.0.0.1:57866 -> 8443
+Forwarding from [::1]:57866 -> 8443
 ```
 
 Open the URL and you can access the Kubernetes Dashboard with the token.
@@ -68,9 +69,10 @@ Run the following command,
 
 ```
 % kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
-Open http://127.0.0.1:57777
-Forwarding from 127.0.0.1:57776 -> 8443
-Forwarding from [::1]:57776 -> 8443
+Starting an authentication proxy for pod/kubernetes-dashboard-57fc4fcb74-jjg77:8443
+Open http://127.0.0.1:57867
+Forwarding from 127.0.0.1:57866 -> 8443
+Forwarding from [::1]:57866 -> 8443
 ```
 
 Open the URL and you can access the Kubernetes Dashboard with the token.
@@ -84,9 +86,10 @@ Run the following command,
 
 ```
 % kubectl auth-proxy https://kibana
-Open http://127.0.0.1:57777
-Forwarding from 127.0.0.1:57776 -> 8443
-Forwarding from [::1]:57776 -> 8443
+Starting an authentication proxy for pod/kibana-57fc4fcb74-jjg77:8443
+Open http://127.0.0.1:57867
+Forwarding from 127.0.0.1:57866 -> 8443
+Forwarding from [::1]:57866 -> 8443
 ```
 
 Open the URL and you can access the Kibana with the token.
