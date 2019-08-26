@@ -1,3 +1,4 @@
+// Package cmd provides command line interface.
 package cmd
 
 import (
@@ -22,11 +23,13 @@ type Interface interface {
 	Run(ctx context.Context, osArgs []string, version string) int
 }
 
+// Cmd provides command line interface.
 type Cmd struct {
 	AuthProxy usecases.AuthProxyInterface
 	Logger    logger.Interface
 }
 
+// Run parses the arguments and executes the corresponding use-case.
 func (cmd *Cmd) Run(ctx context.Context, osArgs []string, version string) int {
 	rootCmd := cmd.newRootCmd(ctx)
 	rootCmd.SilenceErrors = true
