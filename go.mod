@@ -3,7 +3,7 @@ module github.com/int128/kauthproxy
 go 1.12
 
 require (
-	github.com/go-test/deep v1.0.2
+	github.com/go-test/deep v1.0.3
 	github.com/golang/mock v1.3.1
 	github.com/google/wire v0.3.0
 	github.com/spf13/cobra v0.0.5
