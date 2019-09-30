@@ -36,14 +36,13 @@ You can install the latest release from [Homebrew](https://brew.sh/), [Krew](htt
 
 ```sh
 # Homebrew
-brew tap int128/kauthproxy
-brew install kauthproxy
+brew install int128/kauthproxy/kauthproxy
 
 # Krew (TODO)
 kubectl krew install auth-proxy
 
 # GitHub Releases
-curl -LO https://github.com/int128/kauthproxy/releases/download/v0.1.0/kauthproxy_linux_amd64.zip
+curl -LO https://github.com/int128/kauthproxy/releases/download/v0.3.0/kauthproxy_linux_amd64.zip
 unzip kauthproxy_linux_amd64.zip
 ln -s kauthproxy kubectl-auth_proxy
 ```
