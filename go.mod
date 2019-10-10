@@ -6,6 +6,7 @@ require (
 	github.com/go-test/deep v1.0.4
 	github.com/golang/mock v1.3.1
 	github.com/google/wire v0.3.0
+	github.com/int128/listener v1.0.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58

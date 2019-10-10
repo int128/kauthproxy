@@ -34,13 +34,16 @@ func TestAuthProxy_Do(t *testing.T) {
 		reverseProxy.EXPECT().
 			Start(notNil, notNil, reverseproxy.Options{
 				Transport: authProxyTransport,
-				Source:    reverseproxy.Source{Address: "localhost:8888"},
+				Source: reverseproxy.Source{
+					AddressCandidates: []string{"127.0.0.1:8000"},
+				},
 				Target: reverseproxy.Target{
 					Scheme: "https",
 					Host:   "localhost",
 					Port:   transitPort,
 				},
-			})
+			}).
+			Return(&url.URL{Scheme: "http", Host: "localhost:8000"}, nil)
 		portForwarder := mock_portforwarder.NewMockInterface(ctrl)
 		portForwarder.EXPECT().
 			Start(notNil, notNil, portforwarder.Options{
@@ -75,10 +78,10 @@ func TestAuthProxy_Do(t *testing.T) {
 			Logger:          mock_logger.New(t),
 		}
 		o := AuthProxyOptions{
-			Config:      c,
-			Namespace:   "NAMESPACE",
-			TargetURL:   parseURL(t, "https://podname"),
-			BindAddress: "localhost:8888",
+			Config:                c,
+			Namespace:             "NAMESPACE",
+			TargetURL:             parseURL(t, "https://podname"),
+			BindAddressCandidates: []string{"127.0.0.1:8000"},
 		}
 		if err := u.Do(context.Background(), o); err != nil {
 			t.Errorf("err wants nil but was %+v", err)
@@ -97,13 +100,16 @@ func TestAuthProxy_Do(t *testing.T) {
 		reverseProxy.EXPECT().
 			Start(notNil, notNil, reverseproxy.Options{
 				Transport: authProxyTransport,
-				Source:    reverseproxy.Source{Address: "localhost:9999"},
+				Source: reverseproxy.Source{
+					AddressCandidates: []string{"127.0.0.1:8000"},
+				},
 				Target: reverseproxy.Target{
 					Scheme: "https",
 					Host:   "localhost",
 					Port:   transitPort,
 				},
-			})
+			}).
+			Return(&url.URL{Scheme: "http", Host: "localhost:8000"}, nil)
 		portForwarder := mock_portforwarder.NewMockInterface(ctrl)
 		portForwarder.EXPECT().
 			Start(notNil, notNil, portforwarder.Options{
@@ -138,10 +144,10 @@ func TestAuthProxy_Do(t *testing.T) {
 			Logger:          mock_logger.New(t),
 		}
 		o := AuthProxyOptions{
-			Config:      c,
-			Namespace:   "NAMESPACE",
-			TargetURL:   parseURL(t, "https://servicename.svc"),
-			BindAddress: "localhost:9999",
+			Config:                c,
+			Namespace:             "NAMESPACE",
+			TargetURL:             parseURL(t, "https://servicename.svc"),
+			BindAddressCandidates: []string{"127.0.0.1:8000"},
 		}
 		if err := u.Do(context.Background(), o); err != nil {
 			t.Errorf("err wants nil but was %+v", err)
