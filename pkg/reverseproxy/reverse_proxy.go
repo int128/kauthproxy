@@ -4,9 +4,10 @@ package reverseproxy
 import (
 	"context"
 	"fmt"
-	"net"
+	"github.com/int128/listener"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 
 	"github.com/google/wire"
 	"github.com/int128/kauthproxy/pkg/logger"
@@ -22,7 +23,7 @@ var Set = wire.NewSet(
 //go:generate mockgen -destination mock_reverseproxy/mock_reverseproxy.go github.com/int128/kauthproxy/pkg/reverseproxy Interface
 
 type Interface interface {
-	Start(ctx context.Context, eg *errgroup.Group, o Options) (string, error)
+	Start(ctx context.Context, eg *errgroup.Group, o Options) (*url.URL, error)
 }
 
 // ReverseProxy provides a reverse proxy.
@@ -39,7 +40,7 @@ type Options struct {
 
 // Source represents a source of proxy.
 type Source struct {
-	Address string // local address to bind
+	AddressCandidates []string
 }
 
 // Target represents a target of proxy.
@@ -50,7 +51,7 @@ type Target struct {
 }
 
 // Start starts a reverse proxy in goroutines and returns the bound address.
-func (rp *ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, o Options) (string, error) {
+func (rp *ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, o Options) (*url.URL, error) {
 	server := &http.Server{
 		Handler: &httputil.ReverseProxy{
 			Transport: o.Transport,
@@ -62,13 +63,13 @@ func (rp *ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, o Options
 		},
 	}
 
-	listener, err := net.Listen("tcp", o.Source.Address)
+	l, err := listener.New(o.Source.AddressCandidates)
 	if err != nil {
-		return "", xerrors.Errorf("could not bind address %s: %w", o.Source.Address, err)
+		return nil, xerrors.Errorf("could not listen: %w", err)
 	}
 	eg.Go(func() error {
-		rp.Logger.V(1).Infof("starting a reverse proxy for %s -> %s:%d", o.Source.Address, o.Target.Host, o.Target.Port)
-		if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {
+		rp.Logger.V(1).Infof("starting a reverse proxy for %s -> %s:%d", l.URL.Host, o.Target.Host, o.Target.Port)
+		if err := server.Serve(l); err != nil && err != http.ErrServerClosed {
 			return xerrors.Errorf("could not start a reverse proxy: %w", err)
 		}
 		rp.Logger.V(1).Infof("stopped the reverse proxy")
@@ -82,5 +83,5 @@ func (rp *ReverseProxy) Start(ctx context.Context, eg *errgroup.Group, o Options
 		}
 		return nil
 	})
-	return listener.Addr().String(), nil
+	return l.URL, nil
 }

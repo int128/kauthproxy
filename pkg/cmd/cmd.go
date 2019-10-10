@@ -23,6 +23,11 @@ type Interface interface {
 	Run(ctx context.Context, osArgs []string, version string) int
 }
 
+var defaultAddress = []string{
+	"127.0.0.1:18000",
+	"127.0.0.1:28000",
+}
+
 // Cmd provides command line interface.
 type Cmd struct {
 	AuthProxy usecases.AuthProxyInterface
@@ -45,13 +50,13 @@ func (cmd *Cmd) Run(ctx context.Context, osArgs []string, version string) int {
 }
 
 type rootCmdOptions struct {
-	k8sOptions *genericclioptions.ConfigFlags
-	address    string
+	k8sOptions        *genericclioptions.ConfigFlags
+	addressCandidates []string
 }
 
 func (o *rootCmdOptions) addFlags(f *pflag.FlagSet) {
 	o.k8sOptions.AddFlags(f)
-	f.StringVar(&o.address, "address", "localhost:0", "The address on which to run the proxy. Default to a random port of localhost.")
+	f.StringArrayVar(&o.addressCandidates, "address", defaultAddress, "The address on which to run the proxy. If set multiple times, it will try binding the address in order")
 }
 
 func (cmd *Cmd) newRootCmd(ctx context.Context) *cobra.Command {
@@ -94,10 +99,10 @@ func (cmd *Cmd) runRootCmd(ctx context.Context, o rootCmdOptions, args []string)
 		return xerrors.Errorf("could not determine the namespace: %w", err)
 	}
 	authProxyOptions := usecases.AuthProxyOptions{
-		Config:      config,
-		Namespace:   namespace,
-		TargetURL:   remoteURL,
-		BindAddress: o.address,
+		Config:                config,
+		Namespace:             namespace,
+		TargetURL:             remoteURL,
+		BindAddressCandidates: o.addressCandidates,
 	}
 	if err := cmd.AuthProxy.Do(ctx, authProxyOptions); err != nil {
 		return xerrors.Errorf("could not run an authentication proxy: %w", err)

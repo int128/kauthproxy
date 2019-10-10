@@ -37,10 +37,10 @@ type AuthProxy struct {
 
 // AuthProxyOptions represents an option of AuthProxy.
 type AuthProxyOptions struct {
-	Config      *rest.Config
-	Namespace   string
-	TargetURL   *url.URL
-	BindAddress string
+	Config                *rest.Config
+	Namespace             string
+	TargetURL             *url.URL
+	BindAddressCandidates []string
 }
 
 // Do runs the use-case.
@@ -65,10 +65,12 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 	}
 
 	eg, ctx := errgroup.WithContext(ctx)
-	bindAddress, err := u.ReverseProxy.Start(ctx, eg,
+	proxyURL, err := u.ReverseProxy.Start(ctx, eg,
 		reverseproxy.Options{
 			Transport: transport,
-			Source:    reverseproxy.Source{Address: o.BindAddress},
+			Source: reverseproxy.Source{
+				AddressCandidates: o.BindAddressCandidates,
+			},
 			Target: reverseproxy.Target{
 				Scheme: o.TargetURL.Scheme,
 				Host:   "localhost",
@@ -90,7 +92,7 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 		return xerrors.Errorf("could not start a port forwarder: %w", err)
 	}
 	u.Logger.Printf("Starting an authentication proxy for pod/%s:%d", pod.Name, containerPort)
-	u.Logger.Printf("Open http://%s", bindAddress)
+	u.Logger.Printf("Open %s", proxyURL)
 
 	if err := eg.Wait(); err != nil {
 		return xerrors.Errorf("error while running the authentication proxy: %w", err)

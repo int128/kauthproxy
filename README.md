@@ -10,7 +10,7 @@ All traffic is routed by the authentication proxy and port forwarder as follows:
 +-----------------------------------+
 | Browser                           |
 +-----------------------------------+
-  ↓ http://localhost:random_port
+  ↓ http://localhost:18000
 +-----------------------------------+              +-----------------------------+
 | Authentication proxy              | <-- token -- | client-go credential plugin |
 +-----------------------------------+              +-----------------------------+
@@ -57,7 +57,7 @@ To access the Kubernetes Dashboard service:
 ```
 % kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
 Starting an authentication proxy for pod/kubernetes-dashboard-57fc4fcb74-jjg77:8443
-Open http://127.0.0.1:57867
+Open http://127.0.0.1:18000
 Forwarding from 127.0.0.1:57866 -> 8443
 Forwarding from [::1]:57866 -> 8443
 ```
@@ -74,7 +74,7 @@ To access the Kubernetes Dashboard service:
 ```
 % kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
 Starting an authentication proxy for pod/kubernetes-dashboard-57fc4fcb74-jjg77:8443
-Open http://127.0.0.1:57867
+Open http://127.0.0.1:18000
 Forwarding from 127.0.0.1:57866 -> 8443
 Forwarding from [::1]:57866 -> 8443
 ```
@@ -116,7 +116,8 @@ Examples:
   kubectl auth-proxy https://kubernetes-dashboard-57fc4fcb74-jjg77
 
 Flags:
-      --address string                   The address on which to run the proxy. Default to a random port of localhost. (default "localhost:0")
+      --add_dir_header                   If true, adds the file directory to the header
+      --address stringArray              The address on which to run the proxy. If set multiple times, it will try binding the address in order (default [127.0.0.1:18000,127.0.0.1:28000])
       --alsologtostderr                  log to standard error as well as files
       --as string                        Username to impersonate for the operation
       --as-group stringArray             Group to impersonate for the operation, this flag can be repeated to specify multiple groups.
