@@ -58,15 +58,15 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 	if err != nil {
 		return xerrors.Errorf("could not allocate a local port: %w", err)
 	}
-	u.Logger.V(1).Infof("allocated port %d for transit", transitPort)
+	u.Logger.V(1).Infof("client -> reverse_proxy -> port_forwarder:%d -> pod -> container:%d", transitPort, containerPort)
 	transport, err := u.Network.NewTransportWithToken(o.Config)
 	if err != nil {
 		return xerrors.Errorf("could not create a transport for reverse proxy: %w", err)
 	}
 
 	eg, ctx := errgroup.WithContext(ctx)
-	proxyURL, err := u.ReverseProxy.Start(ctx, eg,
-		reverseproxy.Options{
+	eg.Go(func() error {
+		rpo := reverseproxy.Options{
 			Transport: transport,
 			Source: reverseproxy.Source{
 				AddressCandidates: o.BindAddressCandidates,
@@ -76,26 +76,32 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 				Host:   "localhost",
 				Port:   transitPort,
 			},
-		})
-	if err != nil {
-		return xerrors.Errorf("could not start a reverse proxy: %w", err)
-	}
-	if err := u.PortForwarder.Start(ctx, eg,
-		portforwarder.Options{
-			Config: o.Config,
-			Source: portforwarder.Source{Port: transitPort},
-			Target: portforwarder.Target{
-				Pod:           pod,
-				ContainerPort: containerPort,
-			},
-		}); err != nil {
-		return xerrors.Errorf("could not start a port forwarder: %w", err)
-	}
-	u.Logger.Printf("Starting an authentication proxy for pod/%s:%d", pod.Name, containerPort)
-	u.Logger.Printf("Open %s", proxyURL)
-
+		}
+		if err := u.ReverseProxy.Run(ctx, rpo); err != nil {
+			return xerrors.Errorf("could not run a reverse proxy: %w", err)
+		}
+		return nil
+	})
+	eg.Go(func() error {
+		for {
+			pfo := portforwarder.Options{
+				Config: o.Config,
+				Source: portforwarder.Source{
+					Port: transitPort,
+				},
+				Target: portforwarder.Target{
+					Pod:           pod,
+					ContainerPort: containerPort,
+				},
+			}
+			if err := u.PortForwarder.Run(ctx, pfo); err != nil {
+				return xerrors.Errorf("could not run a port forwarder: %w", err)
+			}
+			// retry connection
+		}
+	})
 	if err := eg.Wait(); err != nil {
-		return xerrors.Errorf("error while running the authentication proxy: %w", err)
+		return xerrors.Errorf("error while running an authentication proxy: %w", err)
 	}
 	return nil
 }

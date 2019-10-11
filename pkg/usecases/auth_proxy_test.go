@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"golang.org/x/xerrors"
 	"net/http"
 	"net/url"
 	"testing"
@@ -32,7 +33,7 @@ func TestAuthProxy_Do(t *testing.T) {
 
 		reverseProxy := mock_reverseproxy.NewMockInterface(ctrl)
 		reverseProxy.EXPECT().
-			Start(notNil, notNil, reverseproxy.Options{
+			Run(notNil, reverseproxy.Options{
 				Transport: authProxyTransport,
 				Source: reverseproxy.Source{
 					AddressCandidates: []string{"127.0.0.1:8000"},
@@ -43,17 +44,18 @@ func TestAuthProxy_Do(t *testing.T) {
 					Port:   transitPort,
 				},
 			}).
-			Return(&url.URL{Scheme: "http", Host: "localhost:8000"}, nil)
+			Return(xerrors.Errorf("finally context canceled: %w", context.Canceled))
 		portForwarder := mock_portforwarder.NewMockInterface(ctrl)
 		portForwarder.EXPECT().
-			Start(notNil, notNil, portforwarder.Options{
+			Run(notNil, portforwarder.Options{
 				Config: c,
 				Source: portforwarder.Source{Port: transitPort},
 				Target: portforwarder.Target{
 					Pod:           pod,
 					ContainerPort: containerPort,
 				},
-			})
+			}).
+			Return(xerrors.Errorf("finally context canceled: %w", context.Canceled))
 		mockResolver := mock_resolver.NewMockInterface(ctrl)
 		mockResolver.EXPECT().
 			FindByPodName("NAMESPACE", "podname").
@@ -83,8 +85,9 @@ func TestAuthProxy_Do(t *testing.T) {
 			TargetURL:             parseURL(t, "https://podname"),
 			BindAddressCandidates: []string{"127.0.0.1:8000"},
 		}
-		if err := u.Do(context.Background(), o); err != nil {
-			t.Errorf("err wants nil but was %+v", err)
+		err := u.Do(context.TODO(), o)
+		if !xerrors.Is(err, context.Canceled) {
+			t.Errorf("err wants context.Canceled but was %+v", err)
 		}
 	})
 	t.Run("ProxyToService", func(t *testing.T) {
@@ -98,7 +101,7 @@ func TestAuthProxy_Do(t *testing.T) {
 
 		reverseProxy := mock_reverseproxy.NewMockInterface(ctrl)
 		reverseProxy.EXPECT().
-			Start(notNil, notNil, reverseproxy.Options{
+			Run(notNil, reverseproxy.Options{
 				Transport: authProxyTransport,
 				Source: reverseproxy.Source{
 					AddressCandidates: []string{"127.0.0.1:8000"},
@@ -109,17 +112,18 @@ func TestAuthProxy_Do(t *testing.T) {
 					Port:   transitPort,
 				},
 			}).
-			Return(&url.URL{Scheme: "http", Host: "localhost:8000"}, nil)
+			Return(xerrors.Errorf("finally context canceled: %w", context.Canceled))
 		portForwarder := mock_portforwarder.NewMockInterface(ctrl)
 		portForwarder.EXPECT().
-			Start(notNil, notNil, portforwarder.Options{
+			Run(notNil, portforwarder.Options{
 				Config: c,
 				Source: portforwarder.Source{Port: transitPort},
 				Target: portforwarder.Target{
 					Pod:           pod,
 					ContainerPort: containerPort,
 				},
-			})
+			}).
+			Return(xerrors.Errorf("finally context canceled: %w", context.Canceled))
 		mockResolver := mock_resolver.NewMockInterface(ctrl)
 		mockResolver.EXPECT().
 			FindByServiceName("NAMESPACE", "servicename").
@@ -149,8 +153,9 @@ func TestAuthProxy_Do(t *testing.T) {
 			TargetURL:             parseURL(t, "https://servicename.svc"),
 			BindAddressCandidates: []string{"127.0.0.1:8000"},
 		}
-		if err := u.Do(context.Background(), o); err != nil {
-			t.Errorf("err wants nil but was %+v", err)
+		err := u.Do(context.TODO(), o)
+		if !xerrors.Is(err, context.Canceled) {
+			t.Errorf("err wants context.Canceled but was %+v", err)
 		}
 	})
 }
