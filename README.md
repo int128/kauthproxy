@@ -1,11 +1,11 @@
 # kauthproxy [![CircleCI](https://circleci.com/gh/int128/kauthproxy.svg?style=shield)](https://circleci.com/gh/int128/kauthproxy)
 
 This is a kubectl plugin to forward a local port to a pod via the authentication proxy.
-It gets a token from the credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)), and adds the token to every HTTP requests.
-
-All traffic is routed via the reverse proxy and port forwarder as follows:
+It forwards HTTP requests to a pod via the reverse proxy and port forwarder as follows:
 
 ![diagram](docs/kauthproxy.svg)
+
+The reverse proxy gets a token from the credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)) and adds the token to the `authorization` header of requests.
 
 
 ## Getting Started
@@ -22,7 +22,7 @@ brew install int128/kauthproxy/kauthproxy
 kubectl krew install auth-proxy
 
 # GitHub Releases
-curl -LO https://github.com/int128/kauthproxy/releases/download/v0.3.0/kauthproxy_linux_amd64.zip
+curl -LO https://github.com/int128/kauthproxy/releases/download/v0.4.0/kauthproxy_linux_amd64.zip
 unzip kauthproxy_linux_amd64.zip
 ln -s kauthproxy kubectl-auth_proxy
 ```
@@ -31,9 +31,9 @@ ln -s kauthproxy kubectl-auth_proxy
 
 You can access the Kubernetes Dashboard without manually entering a token.
 
-**Amazon EKS**: You need to [set up the kubeconfig to use the aws-iam-authenticator or `aws eks get-token`](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html).
+For Amazon EKS, [set up the kubeconfig to use the aws-iam-authenticator or `aws eks get-token`](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html).
 
-**OpenID Connect**: you need to set up the kubeconfig to use [kubelogin](https://github.com/int128/kubelogin).
+For OpenID Connect, set up the kubeconfig to use [kubelogin](https://github.com/int128/kubelogin).
 
 To access the service of Kubernetes Dashboard:
 
