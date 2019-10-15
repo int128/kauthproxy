@@ -8,8 +8,6 @@ import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
 	reverseproxy "github.com/int128/kauthproxy/pkg/reverseproxy"
-	errgroup "golang.org/x/sync/errgroup"
-	url "net/url"
 	reflect "reflect"
 )
 
@@ -36,17 +34,16 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 	return m.recorder
 }
 
-// Start mocks base method
-func (m *MockInterface) Start(arg0 context.Context, arg1 *errgroup.Group, arg2 reverseproxy.Options) (*url.URL, error) {
+// Run mocks base method
+func (m *MockInterface) Run(arg0 context.Context, arg1 reverseproxy.Options) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Start", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*url.URL)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "Run", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
-// Start indicates an expected call of Start
-func (mr *MockInterfaceMockRecorder) Start(arg0, arg1, arg2 interface{}) *gomock.Call {
+// Run indicates an expected call of Run
+func (mr *MockInterfaceMockRecorder) Run(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockInterface)(nil).Start), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockInterface)(nil).Run), arg0, arg1)
 }

@@ -43,7 +43,12 @@ func (cmd *Cmd) Run(ctx context.Context, osArgs []string, version string) int {
 
 	rootCmd.SetArgs(osArgs[1:])
 	if err := rootCmd.Execute(); err != nil {
+		if xerrors.Is(err, context.Canceled) {
+			cmd.Logger.V(1).Infof("terminating: %s", err)
+			return 0
+		}
 		cmd.Logger.Printf("error: %s", err)
+		cmd.Logger.V(1).Infof("stacktrace: %+v", err)
 		return 1
 	}
 	return 0
