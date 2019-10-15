@@ -1,4 +1,4 @@
-package usecases
+package authproxy
 
 import (
 	"context"
@@ -19,11 +19,11 @@ import (
 
 var Set = wire.NewSet(
 	wire.Struct(new(AuthProxy), "*"),
-	wire.Bind(new(AuthProxyInterface), new(*AuthProxy)),
+	wire.Bind(new(Interface), new(*AuthProxy)),
 )
 
-type AuthProxyInterface interface {
-	Do(ctx context.Context, in AuthProxyOptions) error
+type Interface interface {
+	Do(ctx context.Context, in Option) error
 }
 
 // AuthProxy provides a use-case of authentication proxy.
@@ -35,8 +35,8 @@ type AuthProxy struct {
 	Logger          logger.Interface
 }
 
-// AuthProxyOptions represents an option of AuthProxy.
-type AuthProxyOptions struct {
+// Option represents an option of AuthProxy.
+type Option struct {
 	Config                *rest.Config
 	Namespace             string
 	TargetURL             *url.URL
@@ -44,7 +44,7 @@ type AuthProxyOptions struct {
 }
 
 // Do runs the use-case.
-func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
+func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 	rsv, err := u.ResolverFactory.New(o.Config)
 	if err != nil {
 		return xerrors.Errorf("could not create a resolver: %w", err)

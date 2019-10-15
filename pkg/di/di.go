@@ -11,18 +11,21 @@ import (
 	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder"
 	"github.com/int128/kauthproxy/pkg/adaptors/resolver"
 	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy"
-	"github.com/int128/kauthproxy/pkg/usecases"
+	"github.com/int128/kauthproxy/pkg/usecases/authproxy"
 )
 
 func NewCmd() cmd.Interface {
 	wire.Build(
+		// adaptors
 		cmd.Set,
-		usecases.Set,
 		reverseproxy.Set,
 		portforwarder.Set,
 		resolver.Set,
 		network.Set,
 		logger.Set,
+
+		// usecases
+		authproxy.Set,
 	)
 	return nil
 }

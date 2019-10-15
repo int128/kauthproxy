@@ -12,7 +12,7 @@ import (
 	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder"
 	"github.com/int128/kauthproxy/pkg/adaptors/resolver"
 	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy"
-	"github.com/int128/kauthproxy/pkg/usecases"
+	"github.com/int128/kauthproxy/pkg/usecases/authproxy"
 )
 
 // Injectors from di.go:
@@ -29,7 +29,7 @@ func NewCmd() cmd.Interface {
 		Logger: loggerLogger,
 	}
 	networkNetwork := &network.Network{}
-	authProxy := &usecases.AuthProxy{
+	authProxy := &authproxy.AuthProxy{
 		ReverseProxy:    reverseProxy,
 		PortForwarder:   portForwarder,
 		ResolverFactory: factory,

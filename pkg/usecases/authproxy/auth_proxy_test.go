@@ -1,4 +1,4 @@
-package usecases
+package authproxy
 
 import (
 	"context"
@@ -79,7 +79,7 @@ func TestAuthProxy_Do(t *testing.T) {
 			Network:         mockNetwork,
 			Logger:          mock_logger.New(t),
 		}
-		o := AuthProxyOptions{
+		o := Option{
 			Config:                c,
 			Namespace:             "NAMESPACE",
 			TargetURL:             parseURL(t, "https://podname"),
@@ -147,7 +147,7 @@ func TestAuthProxy_Do(t *testing.T) {
 			Network:         mockNetwork,
 			Logger:          mock_logger.New(t),
 		}
-		o := AuthProxyOptions{
+		o := Option{
 			Config:                c,
 			Namespace:             "NAMESPACE",
 			TargetURL:             parseURL(t, "https://servicename.svc"),
