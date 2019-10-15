@@ -1,29 +1,11 @@
 # kauthproxy [![CircleCI](https://circleci.com/gh/int128/kauthproxy.svg?style=shield)](https://circleci.com/gh/int128/kauthproxy)
 
-This is a kubectl plugin to forward a local port to a pod or service via the authentication proxy.
-It gets a token from the current credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)).
-Then it appends the authorization header to HTTP requests, like `authorization: Bearer token`.
+This is a kubectl plugin to forward a local port to a pod via the authentication proxy.
+It gets a token from the credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)), and adds the token to every HTTP requests.
 
-All traffic is routed by the authentication proxy and port forwarder as follows:
+All traffic is routed via the reverse proxy and port forwarder as follows:
 
-```
-+-----------------------------------+
-| Browser                           |
-+-----------------------------------+
-  ↓ http://localhost:18000
-+-----------------------------------+              +-----------------------------+
-| Authentication proxy              | <-- token -- | client-go credential plugin |
-+-----------------------------------+              +-----------------------------+
-  ↓ http://localhost:random_port
-  ↓ Authorization: Bearer token
-+-----------------------------------+
-| Port forwarder                    |
-+-----------------------------------+
-  ↓ http://localhost:container_port
-+-----------------------------------+
-| Pod                               |
-+-----------------------------------+
-```
+![diagram](docs/kauthproxy.svg)
 
 **Status**: Alpha. Specification may be changed in the future.
 
