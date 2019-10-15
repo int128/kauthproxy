@@ -10,7 +10,7 @@ import (
 	"os"
 
 	"github.com/google/wire"
-	"github.com/int128/kauthproxy/pkg/logger"
+	"github.com/int128/kauthproxy/pkg/adaptors/logger"
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
@@ -23,7 +23,7 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*PortForwarder)),
 )
 
-//go:generate mockgen -destination mock_portforwarder/mock_portforwarder.go github.com/int128/kauthproxy/pkg/portforwarder Interface
+//go:generate mockgen -destination mock_portforwarder/mock_portforwarder.go github.com/int128/kauthproxy/pkg/adaptors/portforwarder Interface
 
 // Options represents an option of PortForwarder.
 type Options struct {

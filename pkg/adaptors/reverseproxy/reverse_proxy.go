@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/wire"
-	"github.com/int128/kauthproxy/pkg/logger"
+	"github.com/int128/kauthproxy/pkg/adaptors/logger"
 	"github.com/int128/listener"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
@@ -18,7 +18,7 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*ReverseProxy)),
 )
 
-//go:generate mockgen -destination mock_reverseproxy/mock_reverseproxy.go github.com/int128/kauthproxy/pkg/reverseproxy Interface
+//go:generate mockgen -destination mock_reverseproxy/mock_reverseproxy.go github.com/int128/kauthproxy/pkg/adaptors/reverseproxy Interface
 
 // Options represents an option of a reverse proxy.
 type Options struct {

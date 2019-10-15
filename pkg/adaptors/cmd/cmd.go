@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/google/wire"
-	"github.com/int128/kauthproxy/pkg/logger"
+	"github.com/int128/kauthproxy/pkg/adaptors/logger"
 	"github.com/int128/kauthproxy/pkg/usecases"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"

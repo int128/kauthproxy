@@ -1,7 +1,7 @@
 package mock_logger
 
 import (
-	"github.com/int128/kauthproxy/pkg/logger"
+	logger2 "github.com/int128/kauthproxy/pkg/adaptors/logger"
 	"github.com/spf13/pflag"
 )
 
@@ -24,7 +24,7 @@ func (l *Logger) Printf(format string, args ...interface{}) {
 	l.t.Logf(format, args...)
 }
 
-func (l *Logger) V(level int) logger.Verbose {
+func (l *Logger) V(level int) logger2.Verbose {
 	return &Verbose{l.t}
 }
 
