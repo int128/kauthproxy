@@ -7,8 +7,6 @@ All traffic is routed via the reverse proxy and port forwarder as follows:
 
 ![diagram](docs/kauthproxy.svg)
 
-**Status**: Alpha. Specification may be changed in the future.
-
 
 ## Getting Started
 
@@ -20,7 +18,7 @@ You can install the latest release from [Homebrew](https://brew.sh/), [Krew](htt
 # Homebrew
 brew install int128/kauthproxy/kauthproxy
 
-# Krew (TODO)
+# Krew
 kubectl krew install auth-proxy
 
 # GitHub Releases
@@ -29,29 +27,15 @@ unzip kauthproxy_linux_amd64.zip
 ln -s kauthproxy kubectl-auth_proxy
 ```
 
+### Access Kubernetes Dashboard
 
-### Kubernetes Dashboard on Amazon EKS
+You can access the Kubernetes Dashboard without manually entering a token.
 
-You need to [configure the kubeconfig](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html) to use [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or `aws eks get-token`.
+**Amazon EKS**: You need to [set up the kubeconfig to use the aws-iam-authenticator or `aws eks get-token`](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html).
 
-To access the Kubernetes Dashboard service:
+**OpenID Connect**: you need to set up the kubeconfig to use [kubelogin](https://github.com/int128/kubelogin).
 
-```
-% kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
-Starting an authentication proxy for pod/kubernetes-dashboard-57fc4fcb74-jjg77:8443
-Open http://127.0.0.1:18000
-Forwarding from 127.0.0.1:57866 -> 8443
-Forwarding from [::1]:57866 -> 8443
-```
-
-Open the URL and you can access the Kubernetes Dashboard with the token.
-
-
-### Kubernetes Dashboard with OpenID Connect authentication
-
-You need to configure the kubeconfig to use [kubelogin](https://github.com/int128/kubelogin).
-
-To access the Kubernetes Dashboard service:
+To access the service of Kubernetes Dashboard:
 
 ```
 % kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
@@ -63,14 +47,9 @@ Forwarding from [::1]:57866 -> 8443
 
 Open the URL and you can access the Kubernetes Dashboard with the token.
 
+### Access Kibana
 
-### Other applications with OpenID Connect authentication
-
-You can access other applications with OpenID Connect authentication by the same way.
-For example,
-
-- Kibana
-- Grafana
+TODO
 
 
 ## Known Issues
