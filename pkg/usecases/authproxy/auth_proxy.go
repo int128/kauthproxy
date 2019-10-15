@@ -110,7 +110,7 @@ func parseTargetURL(r resolver.Interface, namespace string, u *url.URL) (*v1.Pod
 	h := u.Hostname()
 	if strings.HasSuffix(h, ".svc") {
 		serviceName := strings.TrimSuffix(h, ".svc")
-		return r.FindByServiceName(namespace, serviceName)
+		return r.FindPodByServiceName(namespace, serviceName)
 	}
-	return r.FindByPodName(namespace, h)
+	return r.FindPodByName(namespace, h)
 }

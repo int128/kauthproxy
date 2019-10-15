@@ -58,7 +58,7 @@ func TestAuthProxy_Do(t *testing.T) {
 			Return(xerrors.Errorf("finally context canceled: %w", context.Canceled))
 		mockResolver := mock_resolver.NewMockInterface(ctrl)
 		mockResolver.EXPECT().
-			FindByPodName("NAMESPACE", "podname").
+			FindPodByName("NAMESPACE", "podname").
 			Return(pod, containerPort, nil)
 		resolverFactory := mock_resolver.NewMockFactoryInterface(ctrl)
 		resolverFactory.EXPECT().
@@ -126,7 +126,7 @@ func TestAuthProxy_Do(t *testing.T) {
 			Return(xerrors.Errorf("finally context canceled: %w", context.Canceled))
 		mockResolver := mock_resolver.NewMockInterface(ctrl)
 		mockResolver.EXPECT().
-			FindByServiceName("NAMESPACE", "servicename").
+			FindPodByServiceName("NAMESPACE", "servicename").
 			Return(pod, containerPort, nil)
 		resolverFactory := mock_resolver.NewMockFactoryInterface(ctrl)
 		resolverFactory.EXPECT().

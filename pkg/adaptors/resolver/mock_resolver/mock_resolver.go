@@ -73,34 +73,34 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 	return m.recorder
 }
 
-// FindByPodName mocks base method
-func (m *MockInterface) FindByPodName(arg0, arg1 string) (*v1.Pod, int, error) {
+// FindPodByName mocks base method
+func (m *MockInterface) FindPodByName(arg0, arg1 string) (*v1.Pod, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByPodName", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindPodByName", arg0, arg1)
 	ret0, _ := ret[0].(*v1.Pod)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// FindByPodName indicates an expected call of FindByPodName
-func (mr *MockInterfaceMockRecorder) FindByPodName(arg0, arg1 interface{}) *gomock.Call {
+// FindPodByName indicates an expected call of FindPodByName
+func (mr *MockInterfaceMockRecorder) FindPodByName(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByPodName", reflect.TypeOf((*MockInterface)(nil).FindByPodName), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindPodByName", reflect.TypeOf((*MockInterface)(nil).FindPodByName), arg0, arg1)
 }
 
-// FindByServiceName mocks base method
-func (m *MockInterface) FindByServiceName(arg0, arg1 string) (*v1.Pod, int, error) {
+// FindPodByServiceName mocks base method
+func (m *MockInterface) FindPodByServiceName(arg0, arg1 string) (*v1.Pod, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByServiceName", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindPodByServiceName", arg0, arg1)
 	ret0, _ := ret[0].(*v1.Pod)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// FindByServiceName indicates an expected call of FindByServiceName
-func (mr *MockInterfaceMockRecorder) FindByServiceName(arg0, arg1 interface{}) *gomock.Call {
+// FindPodByServiceName indicates an expected call of FindPodByServiceName
+func (mr *MockInterfaceMockRecorder) FindPodByServiceName(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByServiceName", reflect.TypeOf((*MockInterface)(nil).FindByServiceName), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindPodByServiceName", reflect.TypeOf((*MockInterface)(nil).FindPodByServiceName), arg0, arg1)
 }
