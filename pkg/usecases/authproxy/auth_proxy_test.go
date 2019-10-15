@@ -16,44 +16,45 @@ import (
 	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy"
 	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy/mock_reverseproxy"
 	v1 "k8s.io/api/core/v1"
+	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 )
 
 var notNil = gomock.Not(gomock.Nil())
 
 func TestAuthProxy_Do(t *testing.T) {
+	const podURL = "/api/v1/namespaces/kube-system/pods/kubernetes-dashboard-xxxxxxxx-xxxxxxxx"
+	pod := &v1.Pod{
+		ObjectMeta: v1meta.ObjectMeta{
+			SelfLink: podURL,
+		},
+	}
+
 	t.Run("ProxyToPod", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		c := &rest.Config{}
-		pod := &v1.Pod{}
 		authProxyTransport := &http.Transport{}
 		const containerPort = 18888
 		const transitPort = 28888
 
 		reverseProxy := mock_reverseproxy.NewMockInterface(ctrl)
 		reverseProxy.EXPECT().
-			Run(notNil, reverseproxy.Options{
-				Transport: authProxyTransport,
-				Source: reverseproxy.Source{
-					AddressCandidates: []string{"127.0.0.1:8000"},
-				},
-				Target: reverseproxy.Target{
-					Scheme: "https",
-					Host:   "localhost",
-					Port:   transitPort,
-				},
+			Run(notNil, reverseproxy.Option{
+				Transport:             authProxyTransport,
+				BindAddressCandidates: []string{"127.0.0.1:8000"},
+				TargetScheme:          "https",
+				TargetHost:            "localhost",
+				TargetPort:            transitPort,
 			}).
 			Return(xerrors.Errorf("finally context canceled: %w", context.Canceled))
 		portForwarder := mock_portforwarder.NewMockInterface(ctrl)
 		portForwarder.EXPECT().
-			Run(notNil, portforwarder.Options{
-				Config: c,
-				Source: portforwarder.Source{Port: transitPort},
-				Target: portforwarder.Target{
-					Pod:           pod,
-					ContainerPort: containerPort,
-				},
+			Run(notNil, portforwarder.Option{
+				Config:              c,
+				SourcePort:          transitPort,
+				TargetPodURL:        podURL,
+				TargetContainerPort: containerPort,
 			}).
 			Return(xerrors.Errorf("finally context canceled: %w", context.Canceled))
 		mockResolver := mock_resolver.NewMockInterface(ctrl)
@@ -94,34 +95,27 @@ func TestAuthProxy_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		c := &rest.Config{}
-		pod := &v1.Pod{}
 		authProxyTransport := &http.Transport{}
 		const containerPort = 19999
 		const transitPort = 29999
 
 		reverseProxy := mock_reverseproxy.NewMockInterface(ctrl)
 		reverseProxy.EXPECT().
-			Run(notNil, reverseproxy.Options{
-				Transport: authProxyTransport,
-				Source: reverseproxy.Source{
-					AddressCandidates: []string{"127.0.0.1:8000"},
-				},
-				Target: reverseproxy.Target{
-					Scheme: "https",
-					Host:   "localhost",
-					Port:   transitPort,
-				},
+			Run(notNil, reverseproxy.Option{
+				Transport:             authProxyTransport,
+				BindAddressCandidates: []string{"127.0.0.1:8000"},
+				TargetScheme:          "https",
+				TargetHost:            "localhost",
+				TargetPort:            transitPort,
 			}).
 			Return(xerrors.Errorf("finally context canceled: %w", context.Canceled))
 		portForwarder := mock_portforwarder.NewMockInterface(ctrl)
 		portForwarder.EXPECT().
-			Run(notNil, portforwarder.Options{
-				Config: c,
-				Source: portforwarder.Source{Port: transitPort},
-				Target: portforwarder.Target{
-					Pod:           pod,
-					ContainerPort: containerPort,
-				},
+			Run(notNil, portforwarder.Option{
+				Config:              c,
+				SourcePort:          transitPort,
+				TargetPodURL:        podURL,
+				TargetContainerPort: containerPort,
 			}).
 			Return(xerrors.Errorf("finally context canceled: %w", context.Canceled))
 		mockResolver := mock_resolver.NewMockInterface(ctrl)

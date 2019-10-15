@@ -20,27 +20,17 @@ var Set = wire.NewSet(
 
 //go:generate mockgen -destination mock_reverseproxy/mock_reverseproxy.go github.com/int128/kauthproxy/pkg/adaptors/reverseproxy Interface
 
-// Options represents an option of a reverse proxy.
-type Options struct {
-	Transport http.RoundTripper
-	Source    Source
-	Target    Target
-}
-
-// Source represents a source of proxy.
-type Source struct {
-	AddressCandidates []string
-}
-
-// Target represents a target of proxy.
-type Target struct {
-	Scheme string
-	Host   string
-	Port   int
+// Option represents an option of a reverse proxy.
+type Option struct {
+	Transport             http.RoundTripper
+	BindAddressCandidates []string
+	TargetScheme          string
+	TargetHost            string
+	TargetPort            int
 }
 
 type Interface interface {
-	Run(ctx context.Context, o Options) error
+	Run(ctx context.Context, o Option) error
 }
 
 type ReverseProxy struct {
@@ -49,18 +39,18 @@ type ReverseProxy struct {
 
 // Run starts a server and waits until the context is canceled.
 // In most case it returns an error which wraps context.Canceled.
-func (rp *ReverseProxy) Run(ctx context.Context, o Options) error {
+func (rp *ReverseProxy) Run(ctx context.Context, o Option) error {
 	s := &http.Server{
 		Handler: &httputil.ReverseProxy{
 			Transport: o.Transport,
 			Director: func(r *http.Request) {
-				r.URL.Scheme = o.Target.Scheme
-				r.URL.Host = fmt.Sprintf("%s:%d", o.Target.Host, o.Target.Port)
+				r.URL.Scheme = o.TargetScheme
+				r.URL.Host = fmt.Sprintf("%s:%d", o.TargetHost, o.TargetPort)
 				r.Host = ""
 			},
 		},
 	}
-	l, err := listener.New(o.Source.AddressCandidates)
+	l, err := listener.New(o.BindAddressCandidates)
 	if err != nil {
 		return xerrors.Errorf("could not listen: %w", err)
 	}

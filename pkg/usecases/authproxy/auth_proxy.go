@@ -66,16 +66,12 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		rpo := reverseproxy.Options{
-			Transport: transport,
-			Source: reverseproxy.Source{
-				AddressCandidates: o.BindAddressCandidates,
-			},
-			Target: reverseproxy.Target{
-				Scheme: o.TargetURL.Scheme,
-				Host:   "localhost",
-				Port:   transitPort,
-			},
+		rpo := reverseproxy.Option{
+			Transport:             transport,
+			BindAddressCandidates: o.BindAddressCandidates,
+			TargetScheme:          o.TargetURL.Scheme,
+			TargetHost:            "localhost",
+			TargetPort:            transitPort,
 		}
 		if err := u.ReverseProxy.Run(ctx, rpo); err != nil {
 			return xerrors.Errorf("could not run a reverse proxy: %w", err)
@@ -84,15 +80,11 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 	})
 	eg.Go(func() error {
 		for {
-			pfo := portforwarder.Options{
-				Config: o.Config,
-				Source: portforwarder.Source{
-					Port: transitPort,
-				},
-				Target: portforwarder.Target{
-					Pod:           pod,
-					ContainerPort: containerPort,
-				},
+			pfo := portforwarder.Option{
+				Config:              o.Config,
+				SourcePort:          transitPort,
+				TargetPodURL:        pod.GetSelfLink(),
+				TargetContainerPort: containerPort,
 			}
 			if err := u.PortForwarder.Run(ctx, pfo); err != nil {
 				return xerrors.Errorf("could not run a port forwarder: %w", err)

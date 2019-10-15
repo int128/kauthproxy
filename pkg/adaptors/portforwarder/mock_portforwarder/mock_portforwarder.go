@@ -35,7 +35,7 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 }
 
 // Run mocks base method
-func (m *MockInterface) Run(arg0 context.Context, arg1 portforwarder.Options) error {
+func (m *MockInterface) Run(arg0 context.Context, arg1 portforwarder.Option) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Run", arg0, arg1)
 	ret0, _ := ret[0].(error)
