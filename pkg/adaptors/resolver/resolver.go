@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/wire"
-	"github.com/int128/kauthproxy/pkg/logger"
+	"github.com/int128/kauthproxy/pkg/adaptors/logger"
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,7 +20,7 @@ var Set = wire.NewSet(
 	wire.Bind(new(FactoryInterface), new(*Factory)),
 )
 
-//go:generate mockgen -destination mock_resolver/mock_resolver.go github.com/int128/kauthproxy/pkg/resolver FactoryInterface,Interface
+//go:generate mockgen -destination mock_resolver/mock_resolver.go github.com/int128/kauthproxy/pkg/adaptors/resolver FactoryInterface,Interface
 
 type FactoryInterface interface {
 	New(config *rest.Config) (Interface, error)
@@ -44,8 +44,8 @@ func (f *Factory) New(config *rest.Config) (Interface, error) {
 }
 
 type Interface interface {
-	FindByServiceName(namespace, serviceName string) (*v1.Pod, int, error)
-	FindByPodName(namespace, podName string) (*v1.Pod, int, error)
+	FindPodByServiceName(namespace, serviceName string) (*v1.Pod, int, error)
+	FindPodByName(namespace, podName string) (*v1.Pod, int, error)
 }
 
 // Resolver provides resolving a pod and container port.
@@ -54,8 +54,8 @@ type Resolver struct {
 	CoreV1 corev1.CoreV1Interface
 }
 
-// FindByServiceName returns a pod and container port associated with the service.
-func (r *Resolver) FindByServiceName(namespace, serviceName string) (*v1.Pod, int, error) {
+// FindPodByServiceName returns a pod and container port associated with the service.
+func (r *Resolver) FindPodByServiceName(namespace, serviceName string) (*v1.Pod, int, error) {
 	r.Logger.V(1).Infof("finding service %s in namespace %s", serviceName, namespace)
 	service, err := r.CoreV1.Services(namespace).Get(serviceName, metav1.GetOptions{})
 	if err != nil {
@@ -87,8 +87,8 @@ func (r *Resolver) FindByServiceName(namespace, serviceName string) (*v1.Pod, in
 	return nil, 0, xerrors.Errorf("no container port in pod %s", pod.Name)
 }
 
-// FindByPodName finds a pod and container port by name.
-func (r *Resolver) FindByPodName(namespace, podName string) (*v1.Pod, int, error) {
+// FindPodByName finds a pod and container port by name.
+func (r *Resolver) FindPodByName(namespace, podName string) (*v1.Pod, int, error) {
 	r.Logger.V(1).Infof("finding pod %s in namespace %s", podName, namespace)
 	pod, err := r.CoreV1.Pods(namespace).Get(podName, metav1.GetOptions{})
 	if err != nil {

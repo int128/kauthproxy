@@ -10,9 +10,8 @@ import (
 	"os"
 
 	"github.com/google/wire"
-	"github.com/int128/kauthproxy/pkg/logger"
+	"github.com/int128/kauthproxy/pkg/adaptors/logger"
 	"golang.org/x/xerrors"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
@@ -23,36 +22,26 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*PortForwarder)),
 )
 
-//go:generate mockgen -destination mock_portforwarder/mock_portforwarder.go github.com/int128/kauthproxy/pkg/portforwarder Interface
+//go:generate mockgen -destination mock_portforwarder/mock_portforwarder.go github.com/int128/kauthproxy/pkg/adaptors/portforwarder Interface
 
-// Options represents an option of PortForwarder.
-type Options struct {
-	Config *rest.Config
-	Source Source
-	Target Target
-}
-
-// Source represents a local source.
-type Source struct {
-	Port int
-}
-
-// Target represents a target pod.
-type Target struct {
-	Pod           *v1.Pod
-	ContainerPort int
+// Option represents an option of PortForwarder.
+type Option struct {
+	Config              *rest.Config
+	SourcePort          int
+	TargetPodURL        string
+	TargetContainerPort int
 }
 
 type Interface interface {
-	Run(ctx context.Context, o Options) error
+	Run(ctx context.Context, o Option) error
 }
 
 type PortForwarder struct {
 	Logger logger.Interface
 }
 
-func (pf *PortForwarder) Run(ctx context.Context, o Options) error {
-	pfURL, err := url.Parse(o.Config.Host + o.Target.Pod.GetSelfLink() + "/portforward")
+func (pf *PortForwarder) Run(ctx context.Context, o Option) error {
+	pfURL, err := url.Parse(o.Config.Host + o.TargetPodURL + "/portforward")
 	if err != nil {
 		return xerrors.Errorf("could not build URL for portforward: %w", err)
 	}
@@ -61,7 +50,7 @@ func (pf *PortForwarder) Run(ctx context.Context, o Options) error {
 		return xerrors.Errorf("could not create a round tripper: %w", err)
 	}
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: rt}, http.MethodPost, pfURL)
-	portPair := fmt.Sprintf("%d:%d", o.Source.Port, o.Target.ContainerPort)
+	portPair := fmt.Sprintf("%d:%d", o.SourcePort, o.TargetContainerPort)
 	stopChan, readyChan := make(chan struct{}), make(chan struct{})
 	forwarder, err := portforward.NewOnAddresses(dialer, []string{"127.0.0.1"}, []string{portPair}, stopChan, readyChan, os.Stdout, os.Stderr)
 	if err != nil {

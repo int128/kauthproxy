@@ -6,8 +6,8 @@ import (
 	"net/url"
 
 	"github.com/google/wire"
-	"github.com/int128/kauthproxy/pkg/logger"
-	"github.com/int128/kauthproxy/pkg/usecases"
+	"github.com/int128/kauthproxy/pkg/adaptors/logger"
+	"github.com/int128/kauthproxy/pkg/usecases/authproxy"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/xerrors"
@@ -30,7 +30,7 @@ var defaultAddress = []string{
 
 // Cmd provides command line interface.
 type Cmd struct {
-	AuthProxy usecases.AuthProxyInterface
+	AuthProxy authproxy.Interface
 	Logger    logger.Interface
 }
 
@@ -103,13 +103,13 @@ func (cmd *Cmd) runRootCmd(ctx context.Context, o rootCmdOptions, args []string)
 	if err != nil {
 		return xerrors.Errorf("could not determine the namespace: %w", err)
 	}
-	authProxyOptions := usecases.AuthProxyOptions{
+	authProxyOption := authproxy.Option{
 		Config:                config,
 		Namespace:             namespace,
 		TargetURL:             remoteURL,
 		BindAddressCandidates: o.addressCandidates,
 	}
-	if err := cmd.AuthProxy.Do(ctx, authProxyOptions); err != nil {
+	if err := cmd.AuthProxy.Do(ctx, authProxyOption); err != nil {
 		return xerrors.Errorf("could not run an authentication proxy: %w", err)
 	}
 	return nil

@@ -1,4 +1,4 @@
-package usecases
+package authproxy
 
 import (
 	"context"
@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/google/wire"
-	"github.com/int128/kauthproxy/pkg/logger"
-	"github.com/int128/kauthproxy/pkg/network"
-	"github.com/int128/kauthproxy/pkg/portforwarder"
-	"github.com/int128/kauthproxy/pkg/resolver"
-	"github.com/int128/kauthproxy/pkg/reverseproxy"
+	"github.com/int128/kauthproxy/pkg/adaptors/logger"
+	"github.com/int128/kauthproxy/pkg/adaptors/network"
+	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder"
+	"github.com/int128/kauthproxy/pkg/adaptors/resolver"
+	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	"k8s.io/api/core/v1"
@@ -19,11 +19,11 @@ import (
 
 var Set = wire.NewSet(
 	wire.Struct(new(AuthProxy), "*"),
-	wire.Bind(new(AuthProxyInterface), new(*AuthProxy)),
+	wire.Bind(new(Interface), new(*AuthProxy)),
 )
 
-type AuthProxyInterface interface {
-	Do(ctx context.Context, in AuthProxyOptions) error
+type Interface interface {
+	Do(ctx context.Context, in Option) error
 }
 
 // AuthProxy provides a use-case of authentication proxy.
@@ -35,8 +35,8 @@ type AuthProxy struct {
 	Logger          logger.Interface
 }
 
-// AuthProxyOptions represents an option of AuthProxy.
-type AuthProxyOptions struct {
+// Option represents an option of AuthProxy.
+type Option struct {
 	Config                *rest.Config
 	Namespace             string
 	TargetURL             *url.URL
@@ -44,7 +44,7 @@ type AuthProxyOptions struct {
 }
 
 // Do runs the use-case.
-func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
+func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 	rsv, err := u.ResolverFactory.New(o.Config)
 	if err != nil {
 		return xerrors.Errorf("could not create a resolver: %w", err)
@@ -66,16 +66,12 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		rpo := reverseproxy.Options{
-			Transport: transport,
-			Source: reverseproxy.Source{
-				AddressCandidates: o.BindAddressCandidates,
-			},
-			Target: reverseproxy.Target{
-				Scheme: o.TargetURL.Scheme,
-				Host:   "localhost",
-				Port:   transitPort,
-			},
+		rpo := reverseproxy.Option{
+			Transport:             transport,
+			BindAddressCandidates: o.BindAddressCandidates,
+			TargetScheme:          o.TargetURL.Scheme,
+			TargetHost:            "localhost",
+			TargetPort:            transitPort,
 		}
 		if err := u.ReverseProxy.Run(ctx, rpo); err != nil {
 			return xerrors.Errorf("could not run a reverse proxy: %w", err)
@@ -84,15 +80,11 @@ func (u *AuthProxy) Do(ctx context.Context, o AuthProxyOptions) error {
 	})
 	eg.Go(func() error {
 		for {
-			pfo := portforwarder.Options{
-				Config: o.Config,
-				Source: portforwarder.Source{
-					Port: transitPort,
-				},
-				Target: portforwarder.Target{
-					Pod:           pod,
-					ContainerPort: containerPort,
-				},
+			pfo := portforwarder.Option{
+				Config:              o.Config,
+				SourcePort:          transitPort,
+				TargetPodURL:        pod.GetSelfLink(),
+				TargetContainerPort: containerPort,
 			}
 			if err := u.PortForwarder.Run(ctx, pfo); err != nil {
 				return xerrors.Errorf("could not run a port forwarder: %w", err)
@@ -110,7 +102,7 @@ func parseTargetURL(r resolver.Interface, namespace string, u *url.URL) (*v1.Pod
 	h := u.Hostname()
 	if strings.HasSuffix(h, ".svc") {
 		serviceName := strings.TrimSuffix(h, ".svc")
-		return r.FindByServiceName(namespace, serviceName)
+		return r.FindPodByServiceName(namespace, serviceName)
 	}
-	return r.FindByPodName(namespace, h)
+	return r.FindPodByName(namespace, h)
 }
