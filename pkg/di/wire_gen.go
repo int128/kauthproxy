@@ -18,13 +18,9 @@ import (
 // Injectors from di.go:
 
 func NewCmd() cmd.Interface {
+	reverseProxy := &reverseproxy.ReverseProxy{}
+	portForwarder := &portforwarder.PortForwarder{}
 	loggerLogger := &logger.Logger{}
-	reverseProxy := &reverseproxy.ReverseProxy{
-		Logger: loggerLogger,
-	}
-	portForwarder := &portforwarder.PortForwarder{
-		Logger: loggerLogger,
-	}
 	factory := &resolver.Factory{
 		Logger: loggerLogger,
 	}

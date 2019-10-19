@@ -34,4 +34,5 @@ type Verbose struct {
 
 func (v *Verbose) Infof(format string, args ...interface{}) {
 	v.t.Logf("I] "+format, args...)
+	//log.Printf("I] "+format, args...)
 }
