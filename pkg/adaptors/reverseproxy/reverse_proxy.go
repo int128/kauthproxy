@@ -4,13 +4,13 @@ package reverseproxy
 import (
 	"context"
 	"fmt"
-	"github.com/google/wire"
-	"github.com/int128/kauthproxy/pkg/adaptors/logger"
-	"github.com/int128/listener"
-	"golang.org/x/sync/errgroup"
-	"golang.org/x/xerrors"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
+
+	"github.com/google/wire"
+	"github.com/int128/listener"
+	"golang.org/x/xerrors"
 )
 
 var Set = wire.NewSet(
@@ -18,7 +18,7 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*ReverseProxy)),
 )
 
-//go:generate mockgen -destination mock_reverseproxy/mock_reverseproxy.go github.com/int128/kauthproxy/pkg/adaptors/reverseproxy Interface
+//go:generate mockgen -destination mock_reverseproxy/mock_reverseproxy.go github.com/int128/kauthproxy/pkg/adaptors/reverseproxy Interface,Instance
 
 // Option represents an option of a reverse proxy.
 type Option struct {
@@ -30,16 +30,25 @@ type Option struct {
 }
 
 type Interface interface {
-	Run(ctx context.Context, o Option) error
+	Run(o Option, readyChan chan<- Instance) error
+}
+
+type Instance interface {
+	URL() *url.URL
+	Shutdown(ctx context.Context) error
 }
 
 type ReverseProxy struct {
-	Logger logger.Interface
 }
 
-// Run starts a server and waits until the context is canceled.
-// In most case it returns an error which wraps context.Canceled.
-func (rp *ReverseProxy) Run(ctx context.Context, o Option) error {
+// Run executes a reverse proxy server.
+//
+// It returns nil if the server has been closed.
+// It returns an error otherwise.
+//
+// It will send the Instance to the readyChan when the reverse proxy is ready.
+// Caller should close the readyChan.
+func (rp *ReverseProxy) Run(o Option, readyChan chan<- Instance) error {
 	s := &http.Server{
 		Handler: &httputil.ReverseProxy{
 			Transport: o.Transport,
@@ -56,34 +65,24 @@ func (rp *ReverseProxy) Run(ctx context.Context, o Option) error {
 	}
 	// l will be closed by s.Serve(l)
 
-	rp.Logger.Printf("Open %s", l.URL)
-
-	finalizeChan := make(chan struct{})
-	var eg errgroup.Group
-	eg.Go(func() error {
-		defer close(finalizeChan)
-		rp.Logger.V(1).Infof("starting a server at %s", l.Addr().String())
-		if err := s.Serve(l); err != nil && err != http.ErrServerClosed {
-			return xerrors.Errorf("could not start a server: %w", err)
-		}
-		rp.Logger.V(1).Infof("stopped the server at %s", l.Addr().String())
-		return nil
-	})
-	eg.Go(func() error {
-		select {
-		case <-ctx.Done():
-			rp.Logger.V(1).Infof("stopping the server at %s", l.Addr().String())
-			if err := s.Shutdown(ctx); err != nil {
-				return xerrors.Errorf("could not stop the server at %s: %w", l.Addr().String(), err)
-			}
-			return xerrors.Errorf("stopping the server: %w", ctx.Err())
-		case <-finalizeChan:
-			rp.Logger.V(1).Infof("finished goroutine of the server at %s", l.Addr().String())
-			return nil
-		}
-	})
-	if err := eg.Wait(); err != nil {
-		return xerrors.Errorf("error while running a reverse proxy: %w", err)
+	if readyChan != nil {
+		readyChan <- &instance{s: s, l: l}
+	}
+	if err := s.Serve(l); err != nil && err != http.ErrServerClosed {
+		return xerrors.Errorf("could not start a server: %w", err)
 	}
 	return nil
+}
+
+type instance struct {
+	s *http.Server
+	l *listener.Listener
+}
+
+func (i *instance) URL() *url.URL {
+	return i.l.URL
+}
+
+func (i *instance) Shutdown(ctx context.Context) error {
+	return i.s.Shutdown(ctx)
 }

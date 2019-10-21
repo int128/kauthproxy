@@ -2,15 +2,12 @@
 package portforwarder
 
 import (
-	"context"
 	"fmt"
-	"golang.org/x/sync/errgroup"
 	"net/http"
 	"net/url"
 	"os"
 
 	"github.com/google/wire"
-	"github.com/int128/kauthproxy/pkg/adaptors/logger"
 	"golang.org/x/xerrors"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
@@ -33,14 +30,20 @@ type Option struct {
 }
 
 type Interface interface {
-	Run(ctx context.Context, o Option) error
+	Run(o Option, readyChan chan struct{}, stopChan <-chan struct{}) error
 }
 
 type PortForwarder struct {
-	Logger logger.Interface
 }
 
-func (pf *PortForwarder) Run(ctx context.Context, o Option) error {
+// Run executes a port forwarder.
+//
+// It returns nil if stopChan has been closed or connection has lost.
+// It returns an error if it could not connect to the pod.
+//
+// It will close the readyChan when the port forwarder is ready.
+// Caller can stop the port forwarder by closing the stopChan.
+func (pf *PortForwarder) Run(o Option, readyChan chan struct{}, stopChan <-chan struct{}) error {
 	pfURL, err := url.Parse(o.Config.Host + o.TargetPodURL + "/portforward")
 	if err != nil {
 		return xerrors.Errorf("could not build URL for portforward: %w", err)
@@ -51,36 +54,12 @@ func (pf *PortForwarder) Run(ctx context.Context, o Option) error {
 	}
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: rt}, http.MethodPost, pfURL)
 	portPair := fmt.Sprintf("%d:%d", o.SourcePort, o.TargetContainerPort)
-	stopChan, readyChan := make(chan struct{}), make(chan struct{})
 	forwarder, err := portforward.NewOnAddresses(dialer, []string{"127.0.0.1"}, []string{portPair}, stopChan, readyChan, os.Stdout, os.Stderr)
 	if err != nil {
 		return xerrors.Errorf("could not create a port forwarder: %w", err)
 	}
-
-	finalizeChan := make(chan struct{})
-	var eg errgroup.Group
-	eg.Go(func() error {
-		defer close(finalizeChan)
-		pf.Logger.V(1).Infof("starting a port forwarder at %s", portPair)
-		if err := forwarder.ForwardPorts(); err != nil {
-			return xerrors.Errorf("could not run the forwarder at %s: %w", portPair, err)
-		}
-		pf.Logger.V(1).Infof("stopped the port forwarder at %s", portPair)
-		return nil
-	})
-	eg.Go(func() error {
-		defer close(stopChan)
-		select {
-		case <-ctx.Done():
-			pf.Logger.V(1).Infof("stopping the port forwarder at %s", portPair)
-			return xerrors.Errorf("stopping the port forwarder: %w", ctx.Err())
-		case <-finalizeChan:
-			pf.Logger.V(1).Infof("finished goroutine of the port forwarder at %s", portPair)
-			return nil
-		}
-	})
-	if err := eg.Wait(); err != nil {
-		return xerrors.Errorf("error while running a port forwarder: %w", err)
+	if err := forwarder.ForwardPorts(); err != nil {
+		return xerrors.Errorf("could not run the port forwarder at %s: %w", portPair, err)
 	}
 	return nil
 }
