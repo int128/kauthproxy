@@ -209,13 +209,15 @@ func TestAuthProxy_Do(t *testing.T) {
 		})
 
 		t.Run("PortForwarderConnectionLost", func(t *testing.T) {
+			// 0ms:   starting
 			// 100ms: the port forwarder is ready
 			// 200ms: the reverse proxy is ready
 			// 400ms: lost connection
-			// 500ms: the port forwarder is ready
-			// 600ms: the reverse proxy is ready
-			// 700ms: cancel the context
-			ctx, cancel := context.WithTimeout(context.TODO(), 700*time.Millisecond)
+			// 900ms: retrying (after the backoff 500ms)
+			// 1000ms: the port forwarder is ready
+			// 1100ms: the reverse proxy is ready
+			// 1200ms: cancel the context
+			ctx, cancel := context.WithTimeout(context.TODO(), 1200*time.Millisecond)
 			defer cancel()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()

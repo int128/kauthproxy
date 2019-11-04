@@ -1,6 +1,8 @@
 package mock_logger
 
 import (
+	"time"
+
 	logger2 "github.com/int128/kauthproxy/pkg/adaptors/logger"
 	"github.com/spf13/pflag"
 )
@@ -21,7 +23,7 @@ func (l *Logger) AddFlags(f *pflag.FlagSet) {
 }
 
 func (l *Logger) Printf(format string, args ...interface{}) {
-	l.t.Logf(format, args...)
+	logf(l.t, "", format, args)
 }
 
 func (l *Logger) V(level int) logger2.Verbose {
@@ -33,6 +35,12 @@ type Verbose struct {
 }
 
 func (v *Verbose) Infof(format string, args ...interface{}) {
-	v.t.Logf("I] "+format, args...)
-	//log.Printf("I] "+format, args...)
+	logf(v.t, "I]", format, args)
+}
+
+func logf(t testingLogf, level, format string, args []interface{}) {
+	t.Logf("%s %2s "+format, append([]interface{}{
+		time.Now().Format("15:04:05.000"),
+		level,
+	}, args...)...)
 }

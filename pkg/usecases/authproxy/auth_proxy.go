@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/cenkalti/backoff"
 	"github.com/google/wire"
 	"github.com/int128/kauthproxy/pkg/adaptors/logger"
 	"github.com/int128/kauthproxy/pkg/adaptors/network"
@@ -82,15 +83,20 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 		TargetHost:            "localhost",
 		TargetPort:            transitPort,
 	}
-	for {
+	b := backoff.NewExponentialBackOff()
+	if err := backoff.Retry(func() error {
 		if err := u.run(ctx, pfo, rpo); err != nil {
 			if xerrors.Is(err, portForwarderConnectionLostError) {
-				continue // retry connection
+				u.Logger.Printf("retrying: %s", err)
+				return err
 			}
-			return xerrors.Errorf("error while running an authentication proxy: %w", err)
+			return backoff.Permanent(err)
 		}
 		return nil
+	}, b); err != nil {
+		return xerrors.Errorf("retry over: %w", err)
 	}
+	return nil
 }
 
 // run runs a port forwarder and reverse proxy, and waits for them, as follows:
@@ -122,6 +128,7 @@ func (u *AuthProxy) run(ctx context.Context, pfo portforwarder.Option, rpo rever
 		}
 		u.Logger.V(1).Infof("stopped the port forwarder")
 		if ctx.Err() == nil {
+			u.Logger.V(1).Infof("connection of the port forwarder has lost")
 			return portForwarderConnectionLostError
 		}
 		return nil
