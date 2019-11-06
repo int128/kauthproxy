@@ -7,11 +7,12 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/google/wire"
+	"github.com/int128/kauthproxy/pkg/adaptors/env"
 	"github.com/int128/kauthproxy/pkg/adaptors/logger"
-	"github.com/int128/kauthproxy/pkg/adaptors/network"
 	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder"
 	"github.com/int128/kauthproxy/pkg/adaptors/resolver"
 	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy"
+	"github.com/int128/kauthproxy/pkg/adaptors/transport"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	"k8s.io/api/core/v1"
@@ -31,11 +32,12 @@ var portForwarderConnectionLostError = xerrors.New("connection lost")
 
 // AuthProxy provides a use-case of authentication proxy.
 type AuthProxy struct {
-	ReverseProxy    reverseproxy.Interface
-	PortForwarder   portforwarder.Interface
-	ResolverFactory resolver.FactoryInterface
-	Network         network.Interface
-	Logger          logger.Interface
+	ReverseProxy     reverseproxy.Interface
+	PortForwarder    portforwarder.Interface
+	ResolverFactory  resolver.FactoryInterface
+	TransportFactory transport.FactoryInterface
+	Env              env.Interface
+	Logger           logger.Interface
 }
 
 // Option represents an option of AuthProxy.
@@ -61,11 +63,11 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 		return xerrors.Errorf("could not find the pod and container port: %w", err)
 	}
 	u.Logger.V(1).Infof("found container port %d of pod %s", containerPort, pod.Name)
-	transitPort, err := u.Network.AllocateLocalPort()
+	transitPort, err := u.Env.AllocateLocalPort()
 	if err != nil {
 		return xerrors.Errorf("could not allocate a local port: %w", err)
 	}
-	transport, err := u.Network.NewTransportWithToken(o.Config)
+	rpTransport, err := u.TransportFactory.New(o.Config)
 	if err != nil {
 		return xerrors.Errorf("could not create a transport for reverse proxy: %w", err)
 	}
@@ -77,7 +79,7 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 		TargetContainerPort: containerPort,
 	}
 	rpo := reverseproxy.Option{
-		Transport:             transport,
+		Transport:             rpTransport,
 		BindAddressCandidates: o.BindAddressCandidates,
 		TargetScheme:          o.TargetURL.Scheme,
 		TargetHost:            "localhost",

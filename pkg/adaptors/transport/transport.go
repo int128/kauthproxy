@@ -1,7 +1,7 @@
-package network
+// Package transport provides a HTTP transport with a token got from the credential plugin of the cluster.
+package transport
 
 import (
-	"net"
 	"net/http"
 
 	"github.com/google/wire"
@@ -12,21 +12,20 @@ import (
 )
 
 var Set = wire.NewSet(
-	wire.Struct(new(Network), "*"),
-	wire.Bind(new(Interface), new(*Network)),
+	wire.Struct(new(Factory), "*"),
+	wire.Bind(new(FactoryInterface), new(*Factory)),
 )
 
-//go:generate mockgen -destination mock_network/mock_network.go github.com/int128/kauthproxy/pkg/adaptors/network Interface
+//go:generate mockgen -destination mock_transport/mock_transport.go github.com/int128/kauthproxy/pkg/adaptors/transport FactoryInterface
 
-type Interface interface {
-	NewTransportWithToken(c *rest.Config) (http.RoundTripper, error)
-	AllocateLocalPort() (int, error)
+type FactoryInterface interface {
+	New(c *rest.Config) (http.RoundTripper, error)
 }
 
-type Network struct{}
+type Factory struct{}
 
-// NewTransportWithToken returns a RoundTripper with token support.
-func (*Network) NewTransportWithToken(c *rest.Config) (http.RoundTripper, error) {
+// New returns a RoundTripper with token support.
+func (*Factory) New(c *rest.Config) (http.RoundTripper, error) {
 	config := &transport.Config{
 		BearerToken:     c.BearerToken,
 		BearerTokenFile: c.BearerTokenFile,
@@ -55,18 +54,4 @@ func (*Network) NewTransportWithToken(c *rest.Config) (http.RoundTripper, error)
 		return nil, xerrors.Errorf("could not create a transport: %w", err)
 	}
 	return t, nil
-}
-
-// AllocateLocalPort returns a free port on localhost.
-func (*Network) AllocateLocalPort() (int, error) {
-	l, err := net.Listen("tcp", "localhost:0")
-	if err != nil {
-		return 0, xerrors.Errorf("could not listen: %w", err)
-	}
-	defer l.Close()
-	addr, ok := l.Addr().(*net.TCPAddr)
-	if !ok {
-		return 0, xerrors.Errorf("internal error: unknown type %T", l.Addr())
-	}
-	return addr.Port, nil
 }
