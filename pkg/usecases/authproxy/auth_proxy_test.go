@@ -9,14 +9,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kauthproxy/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kauthproxy/pkg/adaptors/network"
 	"github.com/int128/kauthproxy/pkg/adaptors/network/mock_network"
 	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder"
 	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder/mock_portforwarder"
-	"github.com/int128/kauthproxy/pkg/adaptors/resolver"
 	"github.com/int128/kauthproxy/pkg/adaptors/resolver/mock_resolver"
 	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy"
 	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy/mock_reverseproxy"
+	"github.com/int128/kauthproxy/pkg/adaptors/transport/mock_transport"
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,23 +37,31 @@ func TestAuthProxy_Do(t *testing.T) {
 	}
 
 	t.Run("ToPod", func(t *testing.T) {
-		newMocks := func(ctrl *gomock.Controller) (network.Interface, resolver.FactoryInterface) {
-			mockNetwork := mock_network.NewMockInterface(ctrl)
-			mockNetwork.EXPECT().
+		type mocks struct {
+			resolverFactory  *mock_resolver.MockFactoryInterface
+			transportFactory *mock_transport.MockFactoryInterface
+			network          *mock_network.MockInterface
+		}
+		newMocks := func(ctrl *gomock.Controller) mocks {
+			m := mocks{
+				resolverFactory:  mock_resolver.NewMockFactoryInterface(ctrl),
+				transportFactory: mock_transport.NewMockFactoryInterface(ctrl),
+				network:          mock_network.NewMockInterface(ctrl),
+			}
+			m.transportFactory.EXPECT().
+				New(&restConfig).
+				Return(&authProxyTransport, nil)
+			m.network.EXPECT().
 				AllocateLocalPort().
 				Return(transitPort, nil)
-			mockNetwork.EXPECT().
-				NewTransportWithToken(&restConfig).
-				Return(&authProxyTransport, nil)
 			mockResolver := mock_resolver.NewMockInterface(ctrl)
 			mockResolver.EXPECT().
 				FindPodByName("NAMESPACE", "podname").
 				Return(pod, containerPort, nil)
-			resolverFactory := mock_resolver.NewMockFactoryInterface(ctrl)
-			resolverFactory.EXPECT().
+			m.resolverFactory.EXPECT().
 				New(&restConfig).
 				Return(mockResolver, nil)
-			return mockNetwork, resolverFactory
+			return m
 		}
 
 		t.Run("Success", func(t *testing.T) {
@@ -98,13 +105,14 @@ func TestAuthProxy_Do(t *testing.T) {
 					readyChan <- i
 					return nil
 				})
-			mockNetwork, resolverFactory := newMocks(ctrl)
+			m := newMocks(ctrl)
 			u := &AuthProxy{
-				ReverseProxy:    reverseProxy,
-				PortForwarder:   portForwarder,
-				ResolverFactory: resolverFactory,
-				Network:         mockNetwork,
-				Logger:          mock_logger.New(t),
+				ReverseProxy:     reverseProxy,
+				PortForwarder:    portForwarder,
+				ResolverFactory:  m.resolverFactory,
+				TransportFactory: m.transportFactory,
+				Network:          m.network,
+				Logger:           mock_logger.New(t),
 			}
 			o := Option{
 				Config:                &restConfig,
@@ -136,13 +144,14 @@ func TestAuthProxy_Do(t *testing.T) {
 					return portForwarderError
 				})
 			reverseProxy := mock_reverseproxy.NewMockInterface(ctrl)
-			mockNetwork, resolverFactory := newMocks(ctrl)
+			m := newMocks(ctrl)
 			u := &AuthProxy{
-				ReverseProxy:    reverseProxy,
-				PortForwarder:   portForwarder,
-				ResolverFactory: resolverFactory,
-				Network:         mockNetwork,
-				Logger:          mock_logger.New(t),
+				ReverseProxy:     reverseProxy,
+				PortForwarder:    portForwarder,
+				ResolverFactory:  m.resolverFactory,
+				TransportFactory: m.transportFactory,
+				Network:          m.network,
+				Logger:           mock_logger.New(t),
 			}
 			o := Option{
 				Config:                &restConfig,
@@ -188,13 +197,14 @@ func TestAuthProxy_Do(t *testing.T) {
 				DoAndReturn(func(o reverseproxy.Option, readyChan chan<- reverseproxy.Instance) error {
 					return reverseProxyError
 				})
-			mockNetwork, resolverFactory := newMocks(ctrl)
+			m := newMocks(ctrl)
 			u := &AuthProxy{
-				ReverseProxy:    reverseProxy,
-				PortForwarder:   portForwarder,
-				ResolverFactory: resolverFactory,
-				Network:         mockNetwork,
-				Logger:          mock_logger.New(t),
+				ReverseProxy:     reverseProxy,
+				PortForwarder:    portForwarder,
+				ResolverFactory:  m.resolverFactory,
+				TransportFactory: m.transportFactory,
+				Network:          m.network,
+				Logger:           mock_logger.New(t),
 			}
 			o := Option{
 				Config:                &restConfig,
@@ -259,13 +269,14 @@ func TestAuthProxy_Do(t *testing.T) {
 					return nil
 				}).
 				Times(2)
-			mockNetwork, resolverFactory := newMocks(ctrl)
+			m := newMocks(ctrl)
 			u := &AuthProxy{
-				ReverseProxy:    reverseProxy,
-				PortForwarder:   portForwarder,
-				ResolverFactory: resolverFactory,
-				Network:         mockNetwork,
-				Logger:          mock_logger.New(t),
+				ReverseProxy:     reverseProxy,
+				PortForwarder:    portForwarder,
+				ResolverFactory:  m.resolverFactory,
+				TransportFactory: m.transportFactory,
+				Network:          m.network,
+				Logger:           mock_logger.New(t),
 			}
 			o := Option{
 				Config:                &restConfig,
@@ -281,80 +292,93 @@ func TestAuthProxy_Do(t *testing.T) {
 	})
 
 	t.Run("ToService", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.TODO(), 500*time.Millisecond)
-		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+		type mocks struct {
+			resolverFactory  *mock_resolver.MockFactoryInterface
+			transportFactory *mock_transport.MockFactoryInterface
+			network          *mock_network.MockInterface
+		}
+		newMocks := func(ctrl *gomock.Controller) mocks {
+			m := mocks{
+				resolverFactory:  mock_resolver.NewMockFactoryInterface(ctrl),
+				transportFactory: mock_transport.NewMockFactoryInterface(ctrl),
+				network:          mock_network.NewMockInterface(ctrl),
+			}
+			m.transportFactory.EXPECT().
+				New(&restConfig).
+				Return(&authProxyTransport, nil)
+			m.network.EXPECT().
+				AllocateLocalPort().
+				Return(transitPort, nil)
+			mockResolver := mock_resolver.NewMockInterface(ctrl)
+			mockResolver.EXPECT().
+				FindPodByServiceName("NAMESPACE", "servicename").
+				Return(pod, containerPort, nil)
+			m.resolverFactory.EXPECT().
+				New(&restConfig).
+				Return(mockResolver, nil)
+			return m
+		}
 
-		mockNetwork := mock_network.NewMockInterface(ctrl)
-		mockNetwork.EXPECT().
-			AllocateLocalPort().
-			Return(transitPort, nil)
-		mockNetwork.EXPECT().
-			NewTransportWithToken(&restConfig).
-			Return(&authProxyTransport, nil)
-		mockResolver := mock_resolver.NewMockInterface(ctrl)
-		mockResolver.EXPECT().
-			FindPodByServiceName("NAMESPACE", "servicename").
-			Return(pod, containerPort, nil)
-		resolverFactory := mock_resolver.NewMockFactoryInterface(ctrl)
-		resolverFactory.EXPECT().
-			New(&restConfig).
-			Return(mockResolver, nil)
-
-		portForwarder := mock_portforwarder.NewMockInterface(ctrl)
-		portForwarder.EXPECT().
-			Run(portforwarder.Option{
-				Config:              &restConfig,
-				SourcePort:          transitPort,
-				TargetPodURL:        podURL,
-				TargetContainerPort: containerPort,
-			}, notNil, notNil).
-			DoAndReturn(func(o portforwarder.Option, readyChan chan struct{}, stopChan <-chan struct{}) error {
-				time.Sleep(100 * time.Millisecond)
-				close(readyChan)
-				<-stopChan
-				return nil
-			})
-		reverseProxyInstance := mock_reverseproxy.NewMockInstance(ctrl)
-		reverseProxyInstance.EXPECT().
-			URL().
-			Return(&url.URL{Scheme: "http", Host: "localhost:8000"})
-		reverseProxyInstance.EXPECT().
-			Shutdown(notNil).
-			Return(nil)
-		reverseProxy := mock_reverseproxy.NewMockInterface(ctrl)
-		reverseProxy.EXPECT().
-			Run(reverseproxy.Option{
-				Transport:             &authProxyTransport,
+		t.Run("Success", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.TODO(), 500*time.Millisecond)
+			defer cancel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			portForwarder := mock_portforwarder.NewMockInterface(ctrl)
+			portForwarder.EXPECT().
+				Run(portforwarder.Option{
+					Config:              &restConfig,
+					SourcePort:          transitPort,
+					TargetPodURL:        podURL,
+					TargetContainerPort: containerPort,
+				}, notNil, notNil).
+				DoAndReturn(func(o portforwarder.Option, readyChan chan struct{}, stopChan <-chan struct{}) error {
+					time.Sleep(100 * time.Millisecond)
+					close(readyChan)
+					<-stopChan
+					return nil
+				})
+			reverseProxyInstance := mock_reverseproxy.NewMockInstance(ctrl)
+			reverseProxyInstance.EXPECT().
+				URL().
+				Return(&url.URL{Scheme: "http", Host: "localhost:8000"})
+			reverseProxyInstance.EXPECT().
+				Shutdown(notNil).
+				Return(nil)
+			reverseProxy := mock_reverseproxy.NewMockInterface(ctrl)
+			reverseProxy.EXPECT().
+				Run(reverseproxy.Option{
+					Transport:             &authProxyTransport,
+					BindAddressCandidates: []string{"127.0.0.1:8000"},
+					TargetScheme:          "https",
+					TargetHost:            "localhost",
+					TargetPort:            transitPort,
+				}, notNil).
+				DoAndReturn(func(o reverseproxy.Option, readyChan chan<- reverseproxy.Instance) error {
+					time.Sleep(100 * time.Millisecond)
+					readyChan <- reverseProxyInstance
+					return nil
+				})
+			m := newMocks(ctrl)
+			u := &AuthProxy{
+				ReverseProxy:     reverseProxy,
+				PortForwarder:    portForwarder,
+				ResolverFactory:  m.resolverFactory,
+				TransportFactory: m.transportFactory,
+				Network:          m.network,
+				Logger:           mock_logger.New(t),
+			}
+			o := Option{
+				Config:                &restConfig,
+				Namespace:             "NAMESPACE",
+				TargetURL:             parseURL(t, "https://servicename.svc"),
 				BindAddressCandidates: []string{"127.0.0.1:8000"},
-				TargetScheme:          "https",
-				TargetHost:            "localhost",
-				TargetPort:            transitPort,
-			}, notNil).
-			DoAndReturn(func(o reverseproxy.Option, readyChan chan<- reverseproxy.Instance) error {
-				time.Sleep(100 * time.Millisecond)
-				readyChan <- reverseProxyInstance
-				return nil
-			})
-
-		u := &AuthProxy{
-			ReverseProxy:    reverseProxy,
-			PortForwarder:   portForwarder,
-			ResolverFactory: resolverFactory,
-			Network:         mockNetwork,
-			Logger:          mock_logger.New(t),
-		}
-		o := Option{
-			Config:                &restConfig,
-			Namespace:             "NAMESPACE",
-			TargetURL:             parseURL(t, "https://servicename.svc"),
-			BindAddressCandidates: []string{"127.0.0.1:8000"},
-		}
-		err := u.Do(ctx, o)
-		if !xerrors.Is(err, context.DeadlineExceeded) {
-			t.Errorf("err wants context.DeadlineExceeded but was %+v", err)
-		}
+			}
+			err := u.Do(ctx, o)
+			if !xerrors.Is(err, context.DeadlineExceeded) {
+				t.Errorf("err wants context.DeadlineExceeded but was %+v", err)
+			}
+		})
 	})
 }
 

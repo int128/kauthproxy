@@ -11,6 +11,7 @@ import (
 	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder"
 	"github.com/int128/kauthproxy/pkg/adaptors/resolver"
 	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy"
+	"github.com/int128/kauthproxy/pkg/adaptors/transport"
 	"github.com/int128/kauthproxy/pkg/usecases/authproxy"
 )
 
@@ -21,6 +22,7 @@ func NewCmd() cmd.Interface {
 		reverseproxy.Set,
 		portforwarder.Set,
 		resolver.Set,
+		transport.Set,
 		network.Set,
 		logger.Set,
 

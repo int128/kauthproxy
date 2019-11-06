@@ -12,6 +12,7 @@ import (
 	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder"
 	"github.com/int128/kauthproxy/pkg/adaptors/resolver"
 	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy"
+	"github.com/int128/kauthproxy/pkg/adaptors/transport"
 	"github.com/int128/kauthproxy/pkg/usecases/authproxy"
 )
 
@@ -24,13 +25,15 @@ func NewCmd() cmd.Interface {
 	factory := &resolver.Factory{
 		Logger: loggerLogger,
 	}
+	transportFactory := &transport.Factory{}
 	networkNetwork := &network.Network{}
 	authProxy := &authproxy.AuthProxy{
-		ReverseProxy:    reverseProxy,
-		PortForwarder:   portForwarder,
-		ResolverFactory: factory,
-		Network:         networkNetwork,
-		Logger:          loggerLogger,
+		ReverseProxy:     reverseProxy,
+		PortForwarder:    portForwarder,
+		ResolverFactory:  factory,
+		TransportFactory: transportFactory,
+		Network:          networkNetwork,
+		Logger:           loggerLogger,
 	}
 	cmdCmd := &cmd.Cmd{
 		AuthProxy: authProxy,

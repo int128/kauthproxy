@@ -6,8 +6,6 @@ package mock_network
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	rest "k8s.io/client-go/rest"
-	http "net/http"
 	reflect "reflect"
 )
 
@@ -47,19 +45,4 @@ func (m *MockInterface) AllocateLocalPort() (int, error) {
 func (mr *MockInterfaceMockRecorder) AllocateLocalPort() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllocateLocalPort", reflect.TypeOf((*MockInterface)(nil).AllocateLocalPort))
-}
-
-// NewTransportWithToken mocks base method
-func (m *MockInterface) NewTransportWithToken(arg0 *rest.Config) (http.RoundTripper, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NewTransportWithToken", arg0)
-	ret0, _ := ret[0].(http.RoundTripper)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// NewTransportWithToken indicates an expected call of NewTransportWithToken
-func (mr *MockInterfaceMockRecorder) NewTransportWithToken(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTransportWithToken", reflect.TypeOf((*MockInterface)(nil).NewTransportWithToken), arg0)
 }
