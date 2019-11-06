@@ -7,8 +7,8 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/google/wire"
+	"github.com/int128/kauthproxy/pkg/adaptors/env"
 	"github.com/int128/kauthproxy/pkg/adaptors/logger"
-	"github.com/int128/kauthproxy/pkg/adaptors/network"
 	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder"
 	"github.com/int128/kauthproxy/pkg/adaptors/resolver"
 	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy"
@@ -36,7 +36,7 @@ type AuthProxy struct {
 	PortForwarder    portforwarder.Interface
 	ResolverFactory  resolver.FactoryInterface
 	TransportFactory transport.FactoryInterface
-	Network          network.Interface
+	Env              env.Interface
 	Logger           logger.Interface
 }
 
@@ -63,7 +63,7 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 		return xerrors.Errorf("could not find the pod and container port: %w", err)
 	}
 	u.Logger.V(1).Infof("found container port %d of pod %s", containerPort, pod.Name)
-	transitPort, err := u.Network.AllocateLocalPort()
+	transitPort, err := u.Env.AllocateLocalPort()
 	if err != nil {
 		return xerrors.Errorf("could not allocate a local port: %w", err)
 	}

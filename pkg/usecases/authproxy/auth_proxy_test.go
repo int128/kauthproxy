@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kauthproxy/pkg/adaptors/env/mock_env"
 	"github.com/int128/kauthproxy/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kauthproxy/pkg/adaptors/network/mock_network"
 	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder"
 	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder/mock_portforwarder"
 	"github.com/int128/kauthproxy/pkg/adaptors/resolver/mock_resolver"
@@ -40,18 +40,18 @@ func TestAuthProxy_Do(t *testing.T) {
 		type mocks struct {
 			resolverFactory  *mock_resolver.MockFactoryInterface
 			transportFactory *mock_transport.MockFactoryInterface
-			network          *mock_network.MockInterface
+			env              *mock_env.MockInterface
 		}
 		newMocks := func(ctrl *gomock.Controller) mocks {
 			m := mocks{
 				resolverFactory:  mock_resolver.NewMockFactoryInterface(ctrl),
 				transportFactory: mock_transport.NewMockFactoryInterface(ctrl),
-				network:          mock_network.NewMockInterface(ctrl),
+				env:              mock_env.NewMockInterface(ctrl),
 			}
 			m.transportFactory.EXPECT().
 				New(&restConfig).
 				Return(&authProxyTransport, nil)
-			m.network.EXPECT().
+			m.env.EXPECT().
 				AllocateLocalPort().
 				Return(transitPort, nil)
 			mockResolver := mock_resolver.NewMockInterface(ctrl)
@@ -111,7 +111,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				PortForwarder:    portForwarder,
 				ResolverFactory:  m.resolverFactory,
 				TransportFactory: m.transportFactory,
-				Network:          m.network,
+				Env:              m.env,
 				Logger:           mock_logger.New(t),
 			}
 			o := Option{
@@ -150,7 +150,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				PortForwarder:    portForwarder,
 				ResolverFactory:  m.resolverFactory,
 				TransportFactory: m.transportFactory,
-				Network:          m.network,
+				Env:              m.env,
 				Logger:           mock_logger.New(t),
 			}
 			o := Option{
@@ -203,7 +203,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				PortForwarder:    portForwarder,
 				ResolverFactory:  m.resolverFactory,
 				TransportFactory: m.transportFactory,
-				Network:          m.network,
+				Env:              m.env,
 				Logger:           mock_logger.New(t),
 			}
 			o := Option{
@@ -275,7 +275,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				PortForwarder:    portForwarder,
 				ResolverFactory:  m.resolverFactory,
 				TransportFactory: m.transportFactory,
-				Network:          m.network,
+				Env:              m.env,
 				Logger:           mock_logger.New(t),
 			}
 			o := Option{
@@ -295,13 +295,13 @@ func TestAuthProxy_Do(t *testing.T) {
 		type mocks struct {
 			resolverFactory  *mock_resolver.MockFactoryInterface
 			transportFactory *mock_transport.MockFactoryInterface
-			network          *mock_network.MockInterface
+			network          *mock_env.MockInterface
 		}
 		newMocks := func(ctrl *gomock.Controller) mocks {
 			m := mocks{
 				resolverFactory:  mock_resolver.NewMockFactoryInterface(ctrl),
 				transportFactory: mock_transport.NewMockFactoryInterface(ctrl),
-				network:          mock_network.NewMockInterface(ctrl),
+				network:          mock_env.NewMockInterface(ctrl),
 			}
 			m.transportFactory.EXPECT().
 				New(&restConfig).
@@ -365,7 +365,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				PortForwarder:    portForwarder,
 				ResolverFactory:  m.resolverFactory,
 				TransportFactory: m.transportFactory,
-				Network:          m.network,
+				Env:              m.network,
 				Logger:           mock_logger.New(t),
 			}
 			o := Option{
