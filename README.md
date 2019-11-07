@@ -45,7 +45,7 @@ Forwarding from 127.0.0.1:57866 -> 8443
 Forwarding from [::1]:57866 -> 8443
 ```
 
-Open the URL and you can access the Kubernetes Dashboard with the token.
+Kauthproxy will open the browser and you can access the Kubernetes Dashboard.
 
 ### Access Kibana
 

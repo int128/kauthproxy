@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/cenkalti/backoff"
 	"github.com/google/wire"
@@ -85,9 +86,10 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 		TargetHost:            "localhost",
 		TargetPort:            transitPort,
 	}
+	var once sync.Once
 	b := backoff.NewExponentialBackOff()
 	if err := backoff.Retry(func() error {
-		if err := u.run(ctx, pfo, rpo); err != nil {
+		if err := u.run(ctx, pfo, rpo, &once); err != nil {
 			if xerrors.Is(err, portForwarderConnectionLostError) {
 				u.Logger.Printf("retrying: %s", err)
 				return err
@@ -105,7 +107,7 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 //
 //	1. Run a port forwarder.
 //	2. When the port forwarder is ready, run a reverse proxy.
-//	3. When the reverse proxy is ready, open the browser.
+//	3. When the reverse proxy is ready, open the browser (only first time).
 //
 // When the context is canceled,
 //
@@ -115,7 +117,7 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 // This never returns nil.
 // It returns an error which wraps context.Canceled if the context is canceled.
 // It returns portForwarderConnectionLostError if a connection has lost.
-func (u *AuthProxy) run(ctx context.Context, pfo portforwarder.Option, rpo reverseproxy.Option) error {
+func (u *AuthProxy) run(ctx context.Context, pfo portforwarder.Option, rpo reverseproxy.Option, once *sync.Once) error {
 	portForwarderIsReady := make(chan struct{})
 	reverseProxyIsReady := make(chan reverseproxy.Instance, 1)
 	stopPortForwarder := make(chan struct{})
@@ -163,7 +165,13 @@ func (u *AuthProxy) run(ctx context.Context, pfo portforwarder.Option, rpo rever
 		select {
 		case rp := <-reverseProxyIsReady:
 			u.Logger.V(1).Infof("the reverse proxy is ready")
-			u.Logger.Printf("Open %s", rp.URL().String())
+			rpURL := rp.URL().String()
+			u.Logger.Printf("Open %s", rpURL)
+			once.Do(func() {
+				if err := u.Env.OpenBrowser(rpURL); err != nil {
+					u.Logger.Printf("error while opening the browser: %s", err)
+				}
+			})
 			// shutdown the reverse proxy when the context is done
 			eg.Go(func() error {
 				<-ctx.Done()
