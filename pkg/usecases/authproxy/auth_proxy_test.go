@@ -106,6 +106,8 @@ func TestAuthProxy_Do(t *testing.T) {
 					return nil
 				})
 			m := newMocks(ctrl)
+			m.env.EXPECT().
+				OpenBrowser("http://localhost:8000")
 			u := &AuthProxy{
 				ReverseProxy:     reverseProxy,
 				PortForwarder:    portForwarder,
@@ -270,6 +272,8 @@ func TestAuthProxy_Do(t *testing.T) {
 				}).
 				Times(2)
 			m := newMocks(ctrl)
+			m.env.EXPECT().
+				OpenBrowser("http://localhost:8000")
 			u := &AuthProxy{
 				ReverseProxy:     reverseProxy,
 				PortForwarder:    portForwarder,
@@ -295,18 +299,18 @@ func TestAuthProxy_Do(t *testing.T) {
 		type mocks struct {
 			resolverFactory  *mock_resolver.MockFactoryInterface
 			transportFactory *mock_transport.MockFactoryInterface
-			network          *mock_env.MockInterface
+			env              *mock_env.MockInterface
 		}
 		newMocks := func(ctrl *gomock.Controller) mocks {
 			m := mocks{
 				resolverFactory:  mock_resolver.NewMockFactoryInterface(ctrl),
 				transportFactory: mock_transport.NewMockFactoryInterface(ctrl),
-				network:          mock_env.NewMockInterface(ctrl),
+				env:              mock_env.NewMockInterface(ctrl),
 			}
 			m.transportFactory.EXPECT().
 				New(&restConfig).
 				Return(&authProxyTransport, nil)
-			m.network.EXPECT().
+			m.env.EXPECT().
 				AllocateLocalPort().
 				Return(transitPort, nil)
 			mockResolver := mock_resolver.NewMockInterface(ctrl)
@@ -360,12 +364,14 @@ func TestAuthProxy_Do(t *testing.T) {
 					return nil
 				})
 			m := newMocks(ctrl)
+			m.env.EXPECT().
+				OpenBrowser("http://localhost:8000")
 			u := &AuthProxy{
 				ReverseProxy:     reverseProxy,
 				PortForwarder:    portForwarder,
 				ResolverFactory:  m.resolverFactory,
 				TransportFactory: m.transportFactory,
-				Env:              m.network,
+				Env:              m.env,
 				Logger:           mock_logger.New(t),
 			}
 			o := Option{

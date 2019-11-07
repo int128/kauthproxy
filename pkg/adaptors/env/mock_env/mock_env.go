@@ -46,3 +46,17 @@ func (mr *MockInterfaceMockRecorder) AllocateLocalPort() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllocateLocalPort", reflect.TypeOf((*MockInterface)(nil).AllocateLocalPort))
 }
+
+// OpenBrowser mocks base method
+func (m *MockInterface) OpenBrowser(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OpenBrowser", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// OpenBrowser indicates an expected call of OpenBrowser
+func (mr *MockInterfaceMockRecorder) OpenBrowser(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenBrowser", reflect.TypeOf((*MockInterface)(nil).OpenBrowser), arg0)
+}

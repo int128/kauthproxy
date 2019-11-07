@@ -4,6 +4,7 @@ import (
 	"net"
 
 	"github.com/google/wire"
+	"github.com/pkg/browser"
 	"golang.org/x/xerrors"
 )
 
@@ -16,6 +17,7 @@ var Set = wire.NewSet(
 
 type Interface interface {
 	AllocateLocalPort() (int, error)
+	OpenBrowser(url string) error
 }
 
 type Env struct{}
@@ -32,4 +34,12 @@ func (*Env) AllocateLocalPort() (int, error) {
 		return 0, xerrors.Errorf("internal error: unknown type %T", l.Addr())
 	}
 	return addr.Port, nil
+}
+
+// OpenBrowser opens the default browser.
+func (*Env) OpenBrowser(url string) error {
+	if err := browser.OpenURL(url); err != nil {
+		return xerrors.Errorf("could not open the browser: %w", err)
+	}
+	return nil
 }
