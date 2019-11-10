@@ -7,7 +7,7 @@ This is a kubectl plugin for access to the [Kubernetes Dashboard](https://github
 
 When you access the Kubernetes Dashboard, you need to enter your token.
 
-<!-- TODO: token screen -->
+<img alt="Entering a token on the Kubernetes Dashboard" src="docs/kubernetes-dashboard-token.png" width="745" height="465">
 
 With the kauthproxy, you do not need to enter your token.
 It runs the authentication proxy on localhost, acquires your token from the credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)) and injects your token into every HTTP requests.
