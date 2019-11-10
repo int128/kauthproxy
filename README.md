@@ -1,6 +1,6 @@
 # kauthproxy [![CircleCI](https://circleci.com/gh/int128/kauthproxy.svg?style=shield)](https://circleci.com/gh/int128/kauthproxy)
 
-This is a kubectl plugin for access to the [Kubernetes Dashboard](https://github.com/kubernetes/dashboard) with the token.
+This is a kubectl plugin to access the [Kubernetes Dashboard](https://github.com/kubernetes/dashboard) with the authentication proxy.
 
 
 ## Purpose
