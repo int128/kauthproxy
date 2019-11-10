@@ -1,11 +1,24 @@
 # kauthproxy [![CircleCI](https://circleci.com/gh/int128/kauthproxy.svg?style=shield)](https://circleci.com/gh/int128/kauthproxy)
 
-This is a kubectl plugin to forward a local port to a pod via the authentication proxy.
-It forwards HTTP requests to a pod via the reverse proxy and port forwarder as follows:
+This is a kubectl plugin for access to the [Kubernetes Dashboard](https://github.com/kubernetes/dashboard) with the token.
+
+
+## Purpose
+
+When you access the Kubernetes Dashboard, you need to enter your token.
+
+<!-- TODO: token screen -->
+
+With the kauthproxy, you do not need to enter your token.
+It runs the authentication proxy on localhost, acquires your token from the credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)) and injects your token into every HTTP requests.
+Take a look at the diagram:
 
 ![diagram](docs/kauthproxy.svg)
 
-The reverse proxy gets a token from the credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)) and adds the token to the `authorization` header of requests.
+You can access the Kubernetes Dashboard **as you, not a shared account**.
+Many articles say creating a service account and sharing the token in your team.
+It should cause security risks, for example, lack of audit and access control per user.
+kauthproxy resolves them.
 
 
 ## Getting Started
@@ -27,9 +40,7 @@ unzip kauthproxy_linux_amd64.zip
 ln -s kauthproxy kubectl-auth_proxy
 ```
 
-### Access Kubernetes Dashboard
-
-You can access the Kubernetes Dashboard without manually entering a token.
+### Access the Kubernetes Dashboard
 
 For Amazon EKS, [set up the kubeconfig to use the aws-iam-authenticator or `aws eks get-token`](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html).
 
@@ -45,16 +56,7 @@ Forwarding from 127.0.0.1:57866 -> 8443
 Forwarding from [::1]:57866 -> 8443
 ```
 
-Kauthproxy will open the browser and you can access the Kubernetes Dashboard.
-
-### Access Kibana
-
-TODO
-
-
-## Known Issues
-
-- kauthproxy always skips TLS verification for a pod. TODO: add a flag
+Kauthproxy opens the browser and you can access the Kubernetes Dashboard.
 
 
 ## Usage
