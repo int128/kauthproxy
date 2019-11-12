@@ -5,7 +5,7 @@ This is a kubectl plugin to access the [Kubernetes Dashboard](https://github.com
 
 ## Purpose
 
-When you access the Kubernetes Dashboard, you need to enter your token.
+To access the Kubernetes Dashboard on a Kubernetes cluster with access control enabled, you need to enter your token as below.
 
 <img alt="Entering a token on the Kubernetes Dashboard" src="docs/kubernetes-dashboard-token.png" width="745" height="465">
 
