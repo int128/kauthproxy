@@ -22,8 +22,10 @@ spec:
       sha256: "{{ sha256 .linux_amd64_archive }}"
       bin: kauthproxy
       files:
-        - from: "kauthproxy"
-          to: "."
+        - from: kauthproxy
+          to: .
+        - from: LICENSE
+          to: .
       selector:
         matchLabels:
           os: linux
@@ -32,8 +34,10 @@ spec:
       sha256: "{{ sha256 .darwin_amd64_archive }}"
       bin: kauthproxy
       files:
-        - from: "kauthproxy"
-          to: "."
+        - from: kauthproxy
+          to: .
+        - from: LICENSE
+          to: .
       selector:
         matchLabels:
           os: darwin
@@ -42,8 +46,10 @@ spec:
       sha256: "{{ sha256 .windows_amd64_archive }}"
       bin: kauthproxy.exe
       files:
-        - from: "kauthproxy.exe"
-          to: "."
+        - from: kauthproxy.exe
+          to: .
+        - from: LICENSE
+          to: .
       selector:
         matchLabels:
           os: windows
