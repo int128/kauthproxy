@@ -5,27 +5,32 @@ This is a kubectl plugin to access the [Kubernetes Dashboard](https://github.com
 
 ## Purpose
 
-To access the Kubernetes Dashboard on a Kubernetes cluster with access control enabled, you need to enter your token as below.
+When you access the Kubernetes Dashboard via `kubectl port-forward` or `Ingress`, you need to enter a token.
 
 <img alt="Entering a token on the Kubernetes Dashboard" src="docs/kubernetes-dashboard-token.png" width="745" height="465">
 
-With the kauthproxy, you do not need to enter your token.
-It runs the authentication proxy on localhost, acquires your token from the credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)) and injects your token into every HTTP requests.
+With the kauthproxy, you can access the Kubernetes Dashboard **as you**.
+No token is required. No shared service account is required.
+You can access it with your token as follows:
+
+1. Run the authentication proxy on localhost.
+1. Acquire your token from the credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)).
+1. Open the browser.
+1. Inject the token to every HTTP requests.
+
 Take a look at the diagram:
 
 ![diagram](docs/kauthproxy.svg)
 
-You can access the Kubernetes Dashboard **as you, not a shared account**.
-Many articles say creating a service account and sharing the token in your team.
-It should cause security risks, for example, lack of audit and access control per user.
-kauthproxy resolves them.
+Many articles say creating a service account and sharing the token.
+It may have security risks, for example, lack of audit and access control per user.
 
 
 ## Getting Started
 
-### Install
+### Setup
 
-You can install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kauthproxy/releases) as follows:
+Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kauthproxy/releases).
 
 ```sh
 # Homebrew
@@ -35,18 +40,30 @@ brew install int128/kauthproxy/kauthproxy
 kubectl krew install auth-proxy
 
 # GitHub Releases
-curl -LO https://github.com/int128/kauthproxy/releases/download/v0.4.0/kauthproxy_linux_amd64.zip
+curl -LO https://github.com/int128/kauthproxy/releases/download/v0.7.0/kauthproxy_linux_amd64.zip
 unzip kauthproxy_linux_amd64.zip
 ln -s kauthproxy kubectl-auth_proxy
 ```
 
-### Access the Kubernetes Dashboard
+You can deploy the Kubernetes Dashboard from [the chart](https://github.com/kubernetes/charts/tree/master/stable/kubernetes-dashboard) with [].
+
+```yaml
+releases:
+  - name: kubernetes-dashboard
+    namespace: kube-system
+    chart: stable/kubernetes-dashboard
+  - name: heapster
+    namespace: kube-system
+    chart: stable/heapster
+```
 
 For Amazon EKS, [set up the kubeconfig to use the aws-iam-authenticator or `aws eks get-token`](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html).
 
 For OpenID Connect, set up the kubeconfig to use [kubelogin](https://github.com/int128/kubelogin).
 
-To access the service of Kubernetes Dashboard:
+### Run
+
+To access the Kubernetes Dashboard:
 
 ```
 % kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
@@ -56,7 +73,7 @@ Forwarding from 127.0.0.1:57866 -> 8443
 Forwarding from [::1]:57866 -> 8443
 ```
 
-Kauthproxy opens the browser and you can access the Kubernetes Dashboard.
+It opens the browser and you can access the Kubernetes Dashboard.
 
 
 ## Usage
