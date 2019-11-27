@@ -17,7 +17,10 @@ For example,
 1. Access control per user.
 
 Do not share a token of a service account because it may break security principle.
-You can use OpenID Connect authentication (e.g. [kubelogin](https://github.com/int128/kubelogin)) or cloud provider based authentication (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or Azure AD).
+Instead you can use OpenID Connect authentication (e.g. [kubelogin](https://github.com/int128/kubelogin)) or cloud provider based authentication (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or Azure AD).
+
+The kauthproxy is a kubectl plugin of the authentication proxy which automatically injects your token to requests.
+You do not need to enter your token manually.
 
 
 ## Getting Started
@@ -38,12 +41,6 @@ curl -LO https://github.com/int128/kauthproxy/releases/download/v0.7.0/kauthprox
 unzip kauthproxy_linux_amd64.zip
 ln -s kauthproxy kubectl-auth_proxy
 ```
-
-Make sure authentication of your cluster is configured.
-See also the articles:
-
-- For Amazon EKS, set up the kubeconfig to [use the aws-iam-authenticator or `aws eks get-token`](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html).
-- For OpenID Connect, set up the kubeconfig to use [kubelogin](https://github.com/int128/kubelogin).
 
 You can deploy the Kubernetes Dashboard to the cluster from [the chart](https://github.com/kubernetes/charts/tree/master/stable/kubernetes-dashboard).
 
@@ -69,7 +66,7 @@ You do not need to enter your token.
 
 ## How it works?
 
-kauthproxy is a kubectl plugin which provides the reverse proxy and port forwarder.
+The kauthproxy is a kubectl plugin which provides the reverse proxy and port forwarder.
 Take a look at the diagram:
 
 ![diagram](docs/kauthproxy.svg)
