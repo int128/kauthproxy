@@ -1,34 +1,28 @@
 # kauthproxy [![CircleCI](https://circleci.com/gh/int128/kauthproxy.svg?style=shield)](https://circleci.com/gh/int128/kauthproxy)
 
-This is a kubectl plugin to access the [Kubernetes Dashboard](https://github.com/kubernetes/dashboard) with the authentication proxy.
+This is a kubectl plugin to access the [Kubernetes Dashboard](https://github.com/kubernetes/dashboard) via the authentication proxy.
 
 
 ## Purpose
 
-When you access the Kubernetes Dashboard via `kubectl port-forward` or `Ingress`, you need to enter a token.
+Kubernetes Dashboard is a cool web UI for Kubernetes clusters.
+It supports the token authentication and you can enter a token on the startup screen.
 
 <img alt="Entering a token on the Kubernetes Dashboard" src="docs/kubernetes-dashboard-token.png" width="745" height="465">
 
-With the kauthproxy, you can access the Kubernetes Dashboard **as you**.
-No token is required. No shared service account is required.
-You can access it with your token as follows:
+It is best practice to use your own token for security.
+For example,
 
-1. Run the authentication proxy on localhost.
-1. Acquire your token from the credential plugin (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or [kubelogin](https://github.com/int128/kubelogin)).
-1. Open the browser.
-1. Inject the token to every HTTP requests.
+1. Audit logging.
+1. Access control per user.
 
-Take a look at the diagram:
-
-![diagram](docs/kauthproxy.svg)
-
-Many articles say creating a service account and sharing the token.
-It may have security risks, for example, lack of audit and access control per user.
+Do not share a token of a service account because it may break security principle.
+You can use OpenID Connect authentication (e.g. [kubelogin](https://github.com/int128/kubelogin)) or cloud provider based authentication (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or Azure AD).
 
 
 ## Getting Started
 
-### Setup
+### Set up
 
 Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kauthproxy/releases).
 
@@ -45,21 +39,17 @@ unzip kauthproxy_linux_amd64.zip
 ln -s kauthproxy kubectl-auth_proxy
 ```
 
-You can deploy the Kubernetes Dashboard from [the chart](https://github.com/kubernetes/charts/tree/master/stable/kubernetes-dashboard) with [].
+Make sure authentication of your cluster is configured.
+See also the articles:
 
-```yaml
-releases:
-  - name: kubernetes-dashboard
-    namespace: kube-system
-    chart: stable/kubernetes-dashboard
-  - name: heapster
-    namespace: kube-system
-    chart: stable/heapster
+- For Amazon EKS, set up the kubeconfig to [use the aws-iam-authenticator or `aws eks get-token`](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html).
+- For OpenID Connect, set up the kubeconfig to use [kubelogin](https://github.com/int128/kubelogin).
+
+You can deploy the Kubernetes Dashboard to the cluster from [the chart](https://github.com/kubernetes/charts/tree/master/stable/kubernetes-dashboard).
+
+```sh
+helm install stable/kubernetes-dashboard --namespace kube-system --name kubernetes-dashboard
 ```
-
-For Amazon EKS, [set up the kubeconfig to use the aws-iam-authenticator or `aws eks get-token`](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html).
-
-For OpenID Connect, set up the kubeconfig to use [kubelogin](https://github.com/int128/kubelogin).
 
 ### Run
 
@@ -73,7 +63,22 @@ Forwarding from 127.0.0.1:57866 -> 8443
 Forwarding from [::1]:57866 -> 8443
 ```
 
-It opens the browser and you can access the Kubernetes Dashboard.
+It will automatically open the browser and show the Kubernetes Dashboard logged in as you.
+You do not need to enter your token.
+
+
+## How it works?
+
+kauthproxy is a kubectl plugin which provides the reverse proxy and port forwarder.
+Take a look at the diagram:
+
+![diagram](docs/kauthproxy.svg)
+
+When you access the Kubernetes Dashboard, the kauthproxy forwards HTTP requests by the following process:
+
+1. Acquire your token from the credential plugin or authentication provider.
+   The token is cached and will be refreshed on expiration.
+1. Set `authorization: bearer TOKEN` header to a request and forward the request to the pod of Kubernetes Dashboard.
 
 
 ## Usage
