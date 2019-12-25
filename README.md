@@ -1,26 +1,33 @@
 # kauthproxy [![CircleCI](https://circleci.com/gh/int128/kauthproxy.svg?style=shield)](https://circleci.com/gh/int128/kauthproxy)
 
-This is a kubectl plugin to access the [Kubernetes Dashboard](https://github.com/kubernetes/dashboard) via the authentication proxy.
+This is a kubectl plugin of the authentication proxy, especially for accessing the [Kubernetes Dashboard](https://github.com/kubernetes/dashboard).
 
 
 ## Purpose
 
-Kubernetes Dashboard is a cool web UI for Kubernetes clusters.
-It supports the token authentication and you can enter a token on the startup screen.
+In the tutorial of Kubernetes Dashboard, it creates a service account and enter the token in the login view.
+It is **not recommended to share a service account in your team** for the security reasons, for example,
 
-<img alt="Entering a token on the Kubernetes Dashboard" src="docs/kubernetes-dashboard-token.png" width="745" height="465">
+1. It breaks access control per user.
+1. It breaks audit logging.
+1. It needs a safe transport to share the token to newcomers. (onboarding)
+1. It cannot revoke users who have left the team. (offboarding)
 
-It is best practice to use your own token for security.
-For example,
+It is **best practice to use your own token**.
 
-1. Audit logging.
-1. Access control per user.
+Kubernetes Dashboard supports [the header based authentication](https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/README.md#authorization-header).
+You can use OpenID Connect (e.g. [kubelogin](https://github.com/int128/kubelogin)) or cloud provider based authentication (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or Azure AD).
 
-Do not share a token of a service account because it may break security principle.
-Instead you can use OpenID Connect authentication (e.g. [kubelogin](https://github.com/int128/kubelogin)) or cloud provider based authentication (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or Azure AD).
+The kauthproxy is a kubectl plugin which provides the reverse proxy and port forwarder.
+Take a look at the diagram:
 
-The kauthproxy is a kubectl plugin of the authentication proxy which automatically injects your token to requests.
-You do not need to enter your token manually.
+![diagram](docs/kauthproxy.svg)
+
+When you access the Kubernetes Dashboard, the kauthproxy forwards HTTP requests by the following process:
+
+1. Acquire your token from the credential plugin or authentication provider.
+   The token is cached and will be refreshed on expiration.
+1. Set `authorization: bearer TOKEN` header to a request and forward the request to the pod of Kubernetes Dashboard.
 
 
 ## Getting Started
@@ -62,20 +69,6 @@ Forwarding from [::1]:57866 -> 8443
 
 It will automatically open the browser and show the Kubernetes Dashboard logged in as you.
 You do not need to enter your token.
-
-
-## How it works?
-
-The kauthproxy is a kubectl plugin which provides the reverse proxy and port forwarder.
-Take a look at the diagram:
-
-![diagram](docs/kauthproxy.svg)
-
-When you access the Kubernetes Dashboard, the kauthproxy forwards HTTP requests by the following process:
-
-1. Acquire your token from the credential plugin or authentication provider.
-   The token is cached and will be refreshed on expiration.
-1. Set `authorization: bearer TOKEN` header to a request and forward the request to the pod of Kubernetes Dashboard.
 
 
 ## Usage
