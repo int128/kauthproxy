@@ -15,7 +15,7 @@ import (
 	"github.com/int128/kauthproxy/pkg/adaptors/resolver/mock_resolver"
 	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy"
 	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy/mock_reverseproxy"
-	"github.com/int128/kauthproxy/pkg/adaptors/transport/mock_transport"
+	"github.com/int128/kauthproxy/pkg/adaptors/transport"
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,9 +24,19 @@ import (
 
 var notNil = gomock.Not(gomock.Nil())
 
+var restConfig rest.Config
+var authProxyTransport http.Transport
+
+func newTransport(t *testing.T) transport.NewFunc {
+	return func(got *rest.Config) (http.RoundTripper, error) {
+		if got != &restConfig {
+			t.Errorf("rest.Config mismatch, got %+v", got)
+		}
+		return &authProxyTransport, nil
+	}
+}
+
 func TestAuthProxy_Do(t *testing.T) {
-	var restConfig rest.Config
-	var authProxyTransport http.Transport
 	const containerPort = 18888
 	const transitPort = 28888
 	const podURL = "/api/v1/namespaces/kube-system/pods/kubernetes-dashboard-xxxxxxxx-xxxxxxxx"
@@ -38,19 +48,14 @@ func TestAuthProxy_Do(t *testing.T) {
 
 	t.Run("ToPod", func(t *testing.T) {
 		type mocks struct {
-			resolverFactory  *mock_resolver.MockFactoryInterface
-			transportFactory *mock_transport.MockFactoryInterface
-			env              *mock_env.MockInterface
+			resolverFactory *mock_resolver.MockFactoryInterface
+			env             *mock_env.MockInterface
 		}
 		newMocks := func(ctrl *gomock.Controller) mocks {
 			m := mocks{
-				resolverFactory:  mock_resolver.NewMockFactoryInterface(ctrl),
-				transportFactory: mock_transport.NewMockFactoryInterface(ctrl),
-				env:              mock_env.NewMockInterface(ctrl),
+				resolverFactory: mock_resolver.NewMockFactoryInterface(ctrl),
+				env:             mock_env.NewMockInterface(ctrl),
 			}
-			m.transportFactory.EXPECT().
-				New(&restConfig).
-				Return(&authProxyTransport, nil)
 			m.env.EXPECT().
 				AllocateLocalPort().
 				Return(transitPort, nil)
@@ -109,12 +114,12 @@ func TestAuthProxy_Do(t *testing.T) {
 			m.env.EXPECT().
 				OpenBrowser("http://localhost:8000")
 			u := &AuthProxy{
-				ReverseProxy:     reverseProxy,
-				PortForwarder:    portForwarder,
-				ResolverFactory:  m.resolverFactory,
-				TransportFactory: m.transportFactory,
-				Env:              m.env,
-				Logger:           mock_logger.New(t),
+				ReverseProxy:    reverseProxy,
+				PortForwarder:   portForwarder,
+				ResolverFactory: m.resolverFactory,
+				NewTransport:    newTransport(t),
+				Env:             m.env,
+				Logger:          mock_logger.New(t),
 			}
 			o := Option{
 				Config:                &restConfig,
@@ -148,12 +153,12 @@ func TestAuthProxy_Do(t *testing.T) {
 			reverseProxy := mock_reverseproxy.NewMockInterface(ctrl)
 			m := newMocks(ctrl)
 			u := &AuthProxy{
-				ReverseProxy:     reverseProxy,
-				PortForwarder:    portForwarder,
-				ResolverFactory:  m.resolverFactory,
-				TransportFactory: m.transportFactory,
-				Env:              m.env,
-				Logger:           mock_logger.New(t),
+				ReverseProxy:    reverseProxy,
+				PortForwarder:   portForwarder,
+				ResolverFactory: m.resolverFactory,
+				NewTransport:    newTransport(t),
+				Env:             m.env,
+				Logger:          mock_logger.New(t),
 			}
 			o := Option{
 				Config:                &restConfig,
@@ -201,12 +206,12 @@ func TestAuthProxy_Do(t *testing.T) {
 				})
 			m := newMocks(ctrl)
 			u := &AuthProxy{
-				ReverseProxy:     reverseProxy,
-				PortForwarder:    portForwarder,
-				ResolverFactory:  m.resolverFactory,
-				TransportFactory: m.transportFactory,
-				Env:              m.env,
-				Logger:           mock_logger.New(t),
+				ReverseProxy:    reverseProxy,
+				PortForwarder:   portForwarder,
+				ResolverFactory: m.resolverFactory,
+				NewTransport:    newTransport(t),
+				Env:             m.env,
+				Logger:          mock_logger.New(t),
 			}
 			o := Option{
 				Config:                &restConfig,
@@ -275,12 +280,12 @@ func TestAuthProxy_Do(t *testing.T) {
 			m.env.EXPECT().
 				OpenBrowser("http://localhost:8000")
 			u := &AuthProxy{
-				ReverseProxy:     reverseProxy,
-				PortForwarder:    portForwarder,
-				ResolverFactory:  m.resolverFactory,
-				TransportFactory: m.transportFactory,
-				Env:              m.env,
-				Logger:           mock_logger.New(t),
+				ReverseProxy:    reverseProxy,
+				PortForwarder:   portForwarder,
+				ResolverFactory: m.resolverFactory,
+				NewTransport:    newTransport(t),
+				Env:             m.env,
+				Logger:          mock_logger.New(t),
 			}
 			o := Option{
 				Config:                &restConfig,
@@ -297,19 +302,14 @@ func TestAuthProxy_Do(t *testing.T) {
 
 	t.Run("ToService", func(t *testing.T) {
 		type mocks struct {
-			resolverFactory  *mock_resolver.MockFactoryInterface
-			transportFactory *mock_transport.MockFactoryInterface
-			env              *mock_env.MockInterface
+			resolverFactory *mock_resolver.MockFactoryInterface
+			env             *mock_env.MockInterface
 		}
 		newMocks := func(ctrl *gomock.Controller) mocks {
 			m := mocks{
-				resolverFactory:  mock_resolver.NewMockFactoryInterface(ctrl),
-				transportFactory: mock_transport.NewMockFactoryInterface(ctrl),
-				env:              mock_env.NewMockInterface(ctrl),
+				resolverFactory: mock_resolver.NewMockFactoryInterface(ctrl),
+				env:             mock_env.NewMockInterface(ctrl),
 			}
-			m.transportFactory.EXPECT().
-				New(&restConfig).
-				Return(&authProxyTransport, nil)
 			m.env.EXPECT().
 				AllocateLocalPort().
 				Return(transitPort, nil)
@@ -367,12 +367,12 @@ func TestAuthProxy_Do(t *testing.T) {
 			m.env.EXPECT().
 				OpenBrowser("http://localhost:8000")
 			u := &AuthProxy{
-				ReverseProxy:     reverseProxy,
-				PortForwarder:    portForwarder,
-				ResolverFactory:  m.resolverFactory,
-				TransportFactory: m.transportFactory,
-				Env:              m.env,
-				Logger:           mock_logger.New(t),
+				ReverseProxy:    reverseProxy,
+				PortForwarder:   portForwarder,
+				ResolverFactory: m.resolverFactory,
+				NewTransport:    newTransport(t),
+				Env:             m.env,
+				Logger:          mock_logger.New(t),
 			}
 			o := Option{
 				Config:                &restConfig,

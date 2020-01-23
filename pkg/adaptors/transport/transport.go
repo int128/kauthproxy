@@ -12,20 +12,13 @@ import (
 )
 
 var Set = wire.NewSet(
-	wire.Struct(new(Factory), "*"),
-	wire.Bind(new(FactoryInterface), new(*Factory)),
+	wire.Value(NewFunc(New)),
 )
 
-//go:generate mockgen -destination mock_transport/mock_transport.go github.com/int128/kauthproxy/pkg/adaptors/transport FactoryInterface
-
-type FactoryInterface interface {
-	New(c *rest.Config) (http.RoundTripper, error)
-}
-
-type Factory struct{}
+type NewFunc func(*rest.Config) (http.RoundTripper, error)
 
 // New returns a RoundTripper with token support.
-func (*Factory) New(c *rest.Config) (http.RoundTripper, error) {
+func New(c *rest.Config) (http.RoundTripper, error) {
 	config := &transport.Config{
 		BearerToken:     c.BearerToken,
 		BearerTokenFile: c.BearerTokenFile,

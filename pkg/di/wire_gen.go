@@ -25,15 +25,15 @@ func NewCmd() cmd.Interface {
 	factory := &resolver.Factory{
 		Logger: loggerLogger,
 	}
-	transportFactory := &transport.Factory{}
+	newFunc := _wireNewFuncValue
 	envEnv := &env.Env{}
 	authProxy := &authproxy.AuthProxy{
-		ReverseProxy:     reverseProxy,
-		PortForwarder:    portForwarder,
-		ResolverFactory:  factory,
-		TransportFactory: transportFactory,
-		Env:              envEnv,
-		Logger:           loggerLogger,
+		ReverseProxy:    reverseProxy,
+		PortForwarder:   portForwarder,
+		ResolverFactory: factory,
+		NewTransport:    newFunc,
+		Env:             envEnv,
+		Logger:          loggerLogger,
 	}
 	cmdCmd := &cmd.Cmd{
 		AuthProxy: authProxy,
@@ -41,3 +41,7 @@ func NewCmd() cmd.Interface {
 	}
 	return cmdCmd
 }
+
+var (
+	_wireNewFuncValue = transport.NewFunc(transport.New)
+)
