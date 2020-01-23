@@ -30,6 +30,8 @@ release: dist
 	ghcp release -u "$(CIRCLE_PROJECT_USERNAME)" -r "$(CIRCLE_PROJECT_REPONAME)" -t "$(CIRCLE_TAG)" dist/output/
 	# publish to Homebrew tap repository
 	ghcp commit -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -b "bump-$(CIRCLE_TAG)" -m "Bump version to $(CIRCLE_TAG)" -C dist/ kauthproxy.rb
+	# create a pull request
+	ghcp pull-request -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -b "bump-$(CIRCLE_TAG)" --title "Bump version to $(CIRCLE_TAG)"
 	# fork krew-index and create a branch
 	ghcp fork-commit -u kubernetes-sigs -r krew-index -b "auth-proxy-$(CIRCLE_TAG)" -m "Bump auth-proxy to $(CIRCLE_TAG)" -C dist/output/ plugins/auth-proxy.yaml
 
