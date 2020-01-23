@@ -44,7 +44,7 @@ brew install int128/kauthproxy/kauthproxy
 kubectl krew install auth-proxy
 
 # GitHub Releases
-curl -LO https://github.com/int128/kauthproxy/releases/download/v0.7.0/kauthproxy_linux_amd64.zip
+curl -LO https://github.com/int128/kauthproxy/releases/download/v1.0.0/kauthproxy_linux_amd64.zip
 unzip kauthproxy_linux_amd64.zip
 ln -s kauthproxy kubectl-auth_proxy
 ```
@@ -74,21 +74,8 @@ You do not need to enter your token.
 ## Usage
 
 ```
-Forward a local port to a pod or service via the authentication proxy.
-It gets a token from the current credential plugin (e.g. EKS, OpenID Connect).
-Then it appends the authorization header to HTTP requests, like "authorization: Bearer token".
-All traffic is routed by the authentication proxy and port forwarder as follows:
-  [browser] -> [authentication proxy] -> [port forwarder] -> [pod]
-
 Usage:
   kubectl auth-proxy POD_OR_SERVICE_URL [flags]
-
-Examples:
-  # To access a service:
-  kubectl auth-proxy https://kubernetes-dashboard.svc
-
-  # To access a pod:
-  kubectl auth-proxy https://kubernetes-dashboard-57fc4fcb74-jjg77
 
 Flags:
       --add_dir_header                   If true, adds the file directory to the header
