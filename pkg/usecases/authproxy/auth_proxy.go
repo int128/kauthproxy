@@ -33,12 +33,12 @@ var portForwarderConnectionLostError = xerrors.New("connection lost")
 
 // AuthProxy provides a use-case of authentication proxy.
 type AuthProxy struct {
-	ReverseProxy     reverseproxy.Interface
-	PortForwarder    portforwarder.Interface
-	ResolverFactory  resolver.FactoryInterface
-	TransportFactory transport.FactoryInterface
-	Env              env.Interface
-	Logger           logger.Interface
+	ReverseProxy    reverseproxy.Interface
+	PortForwarder   portforwarder.Interface
+	ResolverFactory resolver.FactoryInterface
+	NewTransport    transport.NewFunc
+	Env             env.Interface
+	Logger          logger.Interface
 }
 
 // Option represents an option of AuthProxy.
@@ -68,7 +68,7 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 	if err != nil {
 		return xerrors.Errorf("could not allocate a local port: %w", err)
 	}
-	rpTransport, err := u.TransportFactory.New(o.Config)
+	rpTransport, err := u.NewTransport(o.Config)
 	if err != nil {
 		return xerrors.Errorf("could not create a transport for reverse proxy: %w", err)
 	}
