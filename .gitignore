@@ -1,5 +1,5 @@
 /.idea
 
-/dist
+/dist/output
 /coverage.out
-/kubectl-oidc_port_forward
+/kauthproxy
