@@ -29,7 +29,7 @@ release: dist
 	# publish to GitHub Releases
 	ghcp release -u "$(CIRCLE_PROJECT_USERNAME)" -r "$(CIRCLE_PROJECT_REPONAME)" -t "$(CIRCLE_TAG)" dist/output/
 	# publish to Homebrew tap repository
-	ghcp commit -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -b "bump-$(CIRCLE_TAG)" -m "Bump version to $(CIRCLE_TAG)" -C dist/ kauthproxy.rb
+	ghcp commit -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -b "bump-$(CIRCLE_TAG)" -m "Bump version to $(CIRCLE_TAG)" -C dist/output/ kauthproxy.rb
 	# create a pull request
 	ghcp pull-request -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -b "bump-$(CIRCLE_TAG)" --title "Bump version to $(CIRCLE_TAG)"
 	# fork krew-index and create a branch
