@@ -36,13 +36,13 @@ type Cmd struct {
 
 // Run parses the arguments and executes the corresponding use-case.
 func (cmd *Cmd) Run(ctx context.Context, osArgs []string, version string) int {
-	rootCmd := cmd.newRootCmd(ctx)
+	rootCmd := cmd.newRootCmd()
 	rootCmd.SilenceErrors = true
 	rootCmd.SilenceUsage = true
 	rootCmd.Version = version
 
 	rootCmd.SetArgs(osArgs[1:])
-	if err := rootCmd.Execute(); err != nil {
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		if xerrors.Is(err, context.Canceled) {
 			cmd.Logger.V(1).Infof("terminating: %s", err)
 			return 0
@@ -64,7 +64,7 @@ func (o *rootCmdOptions) addFlags(f *pflag.FlagSet) {
 	f.StringArrayVar(&o.addressCandidates, "address", defaultAddress, "The address on which to run the proxy. If set multiple times, it will try binding the address in order")
 }
 
-func (cmd *Cmd) newRootCmd(ctx context.Context) *cobra.Command {
+func (cmd *Cmd) newRootCmd() *cobra.Command {
 	var o rootCmdOptions
 	o.k8sOptions = genericclioptions.NewConfigFlags(false)
 	c := &cobra.Command{
@@ -81,8 +81,8 @@ All traffic is routed by the authentication proxy and port forwarder as follows:
   # To access a pod:
   kubectl auth-proxy https://kubernetes-dashboard-57fc4fcb74-jjg77`,
 		Args: cobra.ExactArgs(1),
-		RunE: func(_ *cobra.Command, args []string) error {
-			return cmd.runRootCmd(ctx, o, args)
+		RunE: func(c *cobra.Command, args []string) error {
+			return cmd.runRootCmd(c.Context(), o, args)
 		},
 	}
 	o.addFlags(c.Flags())
