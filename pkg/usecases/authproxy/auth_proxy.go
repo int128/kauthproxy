@@ -8,6 +8,7 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/google/wire"
+	"github.com/int128/kauthproxy/pkg/adaptors/browser"
 	"github.com/int128/kauthproxy/pkg/adaptors/env"
 	"github.com/int128/kauthproxy/pkg/adaptors/logger"
 	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder"
@@ -38,6 +39,7 @@ type AuthProxy struct {
 	ResolverFactory resolver.FactoryInterface
 	NewTransport    transport.NewFunc
 	Env             env.Interface
+	Browser         browser.Interface
 	Logger          logger.Interface
 }
 
@@ -168,7 +170,7 @@ func (u *AuthProxy) run(ctx context.Context, pfo portforwarder.Option, rpo rever
 			rpURL := rp.URL().String()
 			u.Logger.Printf("Open %s", rpURL)
 			once.Do(func() {
-				if err := u.Env.OpenBrowser(rpURL); err != nil {
+				if err := u.Browser.Open(rpURL); err != nil {
 					u.Logger.Printf("error while opening the browser: %s", err)
 				}
 			})

@@ -5,6 +5,7 @@ package di
 
 import (
 	"github.com/google/wire"
+	"github.com/int128/kauthproxy/pkg/adaptors/browser"
 	"github.com/int128/kauthproxy/pkg/adaptors/cmd"
 	"github.com/int128/kauthproxy/pkg/adaptors/env"
 	"github.com/int128/kauthproxy/pkg/adaptors/logger"
@@ -24,6 +25,7 @@ func NewCmd() cmd.Interface {
 		resolver.Set,
 		transport.Set,
 		env.Set,
+		browser.Set,
 		logger.Set,
 
 		// usecases
