@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kauthproxy/pkg/adaptors/browser/mock_browser"
 	"github.com/int128/kauthproxy/pkg/adaptors/env/mock_env"
 	"github.com/int128/kauthproxy/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder"
@@ -50,11 +51,13 @@ func TestAuthProxy_Do(t *testing.T) {
 		type mocks struct {
 			resolverFactory *mock_resolver.MockFactoryInterface
 			env             *mock_env.MockInterface
+			browser         *mock_browser.MockInterface
 		}
 		newMocks := func(ctrl *gomock.Controller) mocks {
 			m := mocks{
 				resolverFactory: mock_resolver.NewMockFactoryInterface(ctrl),
 				env:             mock_env.NewMockInterface(ctrl),
+				browser:         mock_browser.NewMockInterface(ctrl),
 			}
 			m.env.EXPECT().
 				AllocateLocalPort().
@@ -111,14 +114,14 @@ func TestAuthProxy_Do(t *testing.T) {
 					return nil
 				})
 			m := newMocks(ctrl)
-			m.env.EXPECT().
-				OpenBrowser("http://localhost:8000")
+			m.browser.EXPECT().Open("http://localhost:8000")
 			u := &AuthProxy{
 				ReverseProxy:    reverseProxy,
 				PortForwarder:   portForwarder,
 				ResolverFactory: m.resolverFactory,
 				NewTransport:    newTransport(t),
 				Env:             m.env,
+				Browser:         m.browser,
 				Logger:          mock_logger.New(t),
 			}
 			o := Option{
@@ -158,6 +161,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				ResolverFactory: m.resolverFactory,
 				NewTransport:    newTransport(t),
 				Env:             m.env,
+				Browser:         m.browser,
 				Logger:          mock_logger.New(t),
 			}
 			o := Option{
@@ -211,6 +215,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				ResolverFactory: m.resolverFactory,
 				NewTransport:    newTransport(t),
 				Env:             m.env,
+				Browser:         m.browser,
 				Logger:          mock_logger.New(t),
 			}
 			o := Option{
@@ -277,14 +282,14 @@ func TestAuthProxy_Do(t *testing.T) {
 				}).
 				Times(2)
 			m := newMocks(ctrl)
-			m.env.EXPECT().
-				OpenBrowser("http://localhost:8000")
+			m.browser.EXPECT().Open("http://localhost:8000")
 			u := &AuthProxy{
 				ReverseProxy:    reverseProxy,
 				PortForwarder:   portForwarder,
 				ResolverFactory: m.resolverFactory,
 				NewTransport:    newTransport(t),
 				Env:             m.env,
+				Browser:         m.browser,
 				Logger:          mock_logger.New(t),
 			}
 			o := Option{
@@ -304,11 +309,13 @@ func TestAuthProxy_Do(t *testing.T) {
 		type mocks struct {
 			resolverFactory *mock_resolver.MockFactoryInterface
 			env             *mock_env.MockInterface
+			browser         *mock_browser.MockInterface
 		}
 		newMocks := func(ctrl *gomock.Controller) mocks {
 			m := mocks{
 				resolverFactory: mock_resolver.NewMockFactoryInterface(ctrl),
 				env:             mock_env.NewMockInterface(ctrl),
+				browser:         mock_browser.NewMockInterface(ctrl),
 			}
 			m.env.EXPECT().
 				AllocateLocalPort().
@@ -364,14 +371,14 @@ func TestAuthProxy_Do(t *testing.T) {
 					return nil
 				})
 			m := newMocks(ctrl)
-			m.env.EXPECT().
-				OpenBrowser("http://localhost:8000")
+			m.browser.EXPECT().Open("http://localhost:8000")
 			u := &AuthProxy{
 				ReverseProxy:    reverseProxy,
 				PortForwarder:   portForwarder,
 				ResolverFactory: m.resolverFactory,
 				NewTransport:    newTransport(t),
 				Env:             m.env,
+				Browser:         m.browser,
 				Logger:          mock_logger.New(t),
 			}
 			o := Option{

@@ -6,6 +6,7 @@
 package di
 
 import (
+	"github.com/int128/kauthproxy/pkg/adaptors/browser"
 	"github.com/int128/kauthproxy/pkg/adaptors/cmd"
 	"github.com/int128/kauthproxy/pkg/adaptors/env"
 	"github.com/int128/kauthproxy/pkg/adaptors/logger"
@@ -27,12 +28,14 @@ func NewCmd() cmd.Interface {
 	}
 	newFunc := _wireNewFuncValue
 	envEnv := &env.Env{}
+	browserBrowser := &browser.Browser{}
 	authProxy := &authproxy.AuthProxy{
 		ReverseProxy:    reverseProxy,
 		PortForwarder:   portForwarder,
 		ResolverFactory: factory,
 		NewTransport:    newFunc,
 		Env:             envEnv,
+		Browser:         browserBrowser,
 		Logger:          loggerLogger,
 	}
 	cmdCmd := &cmd.Cmd{
