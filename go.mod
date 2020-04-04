@@ -6,7 +6,7 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/golang/mock v1.4.1
 	github.com/google/wire v0.4.0
-	github.com/int128/listener v1.0.0
+	github.com/int128/listener v1.1.0
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/spf13/cobra v0.0.6
 	github.com/spf13/pflag v1.0.5
