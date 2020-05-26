@@ -5,6 +5,7 @@
 package mock_resolver
 
 import (
+	context "context"
 	gomock "github.com/golang/mock/gomock"
 	resolver "github.com/int128/kauthproxy/pkg/adaptors/resolver"
 	v1 "k8s.io/api/core/v1"
@@ -12,30 +13,30 @@ import (
 	reflect "reflect"
 )
 
-// MockFactoryInterface is a mock of FactoryInterface interface
+// MockFactoryInterface is a mock of FactoryInterface interface.
 type MockFactoryInterface struct {
 	ctrl     *gomock.Controller
 	recorder *MockFactoryInterfaceMockRecorder
 }
 
-// MockFactoryInterfaceMockRecorder is the mock recorder for MockFactoryInterface
+// MockFactoryInterfaceMockRecorder is the mock recorder for MockFactoryInterface.
 type MockFactoryInterfaceMockRecorder struct {
 	mock *MockFactoryInterface
 }
 
-// NewMockFactoryInterface creates a new mock instance
+// NewMockFactoryInterface creates a new mock instance.
 func NewMockFactoryInterface(ctrl *gomock.Controller) *MockFactoryInterface {
 	mock := &MockFactoryInterface{ctrl: ctrl}
 	mock.recorder = &MockFactoryInterfaceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockFactoryInterface) EXPECT() *MockFactoryInterfaceMockRecorder {
 	return m.recorder
 }
 
-// New mocks base method
+// New mocks base method.
 func (m *MockFactoryInterface) New(arg0 *rest.Config) (resolver.Interface, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "New", arg0)
@@ -44,63 +45,63 @@ func (m *MockFactoryInterface) New(arg0 *rest.Config) (resolver.Interface, error
 	return ret0, ret1
 }
 
-// New indicates an expected call of New
+// New indicates an expected call of New.
 func (mr *MockFactoryInterfaceMockRecorder) New(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "New", reflect.TypeOf((*MockFactoryInterface)(nil).New), arg0)
 }
 
-// MockInterface is a mock of Interface interface
+// MockInterface is a mock of Interface interface.
 type MockInterface struct {
 	ctrl     *gomock.Controller
 	recorder *MockInterfaceMockRecorder
 }
 
-// MockInterfaceMockRecorder is the mock recorder for MockInterface
+// MockInterfaceMockRecorder is the mock recorder for MockInterface.
 type MockInterfaceMockRecorder struct {
 	mock *MockInterface
 }
 
-// NewMockInterface creates a new mock instance
+// NewMockInterface creates a new mock instance.
 func NewMockInterface(ctrl *gomock.Controller) *MockInterface {
 	mock := &MockInterface{ctrl: ctrl}
 	mock.recorder = &MockInterfaceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 	return m.recorder
 }
 
-// FindPodByName mocks base method
-func (m *MockInterface) FindPodByName(arg0, arg1 string) (*v1.Pod, int, error) {
+// FindPodByName mocks base method.
+func (m *MockInterface) FindPodByName(arg0 context.Context, arg1, arg2 string) (*v1.Pod, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindPodByName", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindPodByName", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.Pod)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// FindPodByName indicates an expected call of FindPodByName
-func (mr *MockInterfaceMockRecorder) FindPodByName(arg0, arg1 interface{}) *gomock.Call {
+// FindPodByName indicates an expected call of FindPodByName.
+func (mr *MockInterfaceMockRecorder) FindPodByName(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindPodByName", reflect.TypeOf((*MockInterface)(nil).FindPodByName), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindPodByName", reflect.TypeOf((*MockInterface)(nil).FindPodByName), arg0, arg1, arg2)
 }
 
-// FindPodByServiceName mocks base method
-func (m *MockInterface) FindPodByServiceName(arg0, arg1 string) (*v1.Pod, int, error) {
+// FindPodByServiceName mocks base method.
+func (m *MockInterface) FindPodByServiceName(arg0 context.Context, arg1, arg2 string) (*v1.Pod, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindPodByServiceName", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindPodByServiceName", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.Pod)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// FindPodByServiceName indicates an expected call of FindPodByServiceName
-func (mr *MockInterfaceMockRecorder) FindPodByServiceName(arg0, arg1 interface{}) *gomock.Call {
+// FindPodByServiceName indicates an expected call of FindPodByServiceName.
+func (mr *MockInterfaceMockRecorder) FindPodByServiceName(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindPodByServiceName", reflect.TypeOf((*MockInterface)(nil).FindPodByServiceName), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindPodByServiceName", reflect.TypeOf((*MockInterface)(nil).FindPodByServiceName), arg0, arg1, arg2)
 }
