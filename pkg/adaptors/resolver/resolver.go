@@ -2,6 +2,7 @@
 package resolver
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -44,8 +45,8 @@ func (f *Factory) New(config *rest.Config) (Interface, error) {
 }
 
 type Interface interface {
-	FindPodByServiceName(namespace, serviceName string) (*v1.Pod, int, error)
-	FindPodByName(namespace, podName string) (*v1.Pod, int, error)
+	FindPodByServiceName(ctx context.Context, namespace, serviceName string) (*v1.Pod, int, error)
+	FindPodByName(ctx context.Context, namespace, podName string) (*v1.Pod, int, error)
 }
 
 // Resolver provides resolving a pod and container port.
@@ -55,9 +56,9 @@ type Resolver struct {
 }
 
 // FindPodByServiceName returns a pod and container port associated with the service.
-func (r *Resolver) FindPodByServiceName(namespace, serviceName string) (*v1.Pod, int, error) {
+func (r *Resolver) FindPodByServiceName(ctx context.Context, namespace, serviceName string) (*v1.Pod, int, error) {
 	r.Logger.V(1).Infof("finding service %s in namespace %s", serviceName, namespace)
-	service, err := r.CoreV1.Services(namespace).Get(serviceName, metav1.GetOptions{})
+	service, err := r.CoreV1.Services(namespace).Get(ctx, serviceName, metav1.GetOptions{})
 	if err != nil {
 		return nil, 0, xerrors.Errorf("could not find the service: %w", err)
 	}
@@ -67,7 +68,7 @@ func (r *Resolver) FindPodByServiceName(namespace, serviceName string) (*v1.Pod,
 	}
 	selector := strings.Join(selectors, ",")
 	r.Logger.V(1).Infof("finding pods by selector %s", selectors)
-	pods, err := r.CoreV1.Pods(namespace).List(metav1.ListOptions{LabelSelector: selector})
+	pods, err := r.CoreV1.Pods(namespace).List(ctx, metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
 		return nil, 0, xerrors.Errorf("could not find pods by selector %s: %w", selector, err)
 	}
@@ -88,9 +89,9 @@ func (r *Resolver) FindPodByServiceName(namespace, serviceName string) (*v1.Pod,
 }
 
 // FindPodByName finds a pod and container port by name.
-func (r *Resolver) FindPodByName(namespace, podName string) (*v1.Pod, int, error) {
+func (r *Resolver) FindPodByName(ctx context.Context, namespace, podName string) (*v1.Pod, int, error) {
 	r.Logger.V(1).Infof("finding pod %s in namespace %s", podName, namespace)
-	pod, err := r.CoreV1.Pods(namespace).Get(podName, metav1.GetOptions{})
+	pod, err := r.CoreV1.Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 	if err != nil {
 		return nil, 0, xerrors.Errorf("could not find the pod: %w", err)
 	}

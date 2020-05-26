@@ -61,7 +61,7 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 	if err != nil {
 		return xerrors.Errorf("could not create a resolver: %w", err)
 	}
-	pod, containerPort, err := parseTargetURL(rsv, o.Namespace, o.TargetURL)
+	pod, containerPort, err := parseTargetURL(ctx, rsv, o.Namespace, o.TargetURL)
 	if err != nil {
 		return xerrors.Errorf("could not find the pod and container port: %w", err)
 	}
@@ -195,11 +195,11 @@ func (u *AuthProxy) run(ctx context.Context, pfo portforwarder.Option, rpo rever
 	return nil
 }
 
-func parseTargetURL(r resolver.Interface, namespace string, u *url.URL) (*v1.Pod, int, error) {
+func parseTargetURL(ctx context.Context, r resolver.Interface, namespace string, u *url.URL) (*v1.Pod, int, error) {
 	h := u.Hostname()
 	if strings.HasSuffix(h, ".svc") {
 		serviceName := strings.TrimSuffix(h, ".svc")
-		return r.FindPodByServiceName(namespace, serviceName)
+		return r.FindPodByServiceName(ctx, namespace, serviceName)
 	}
-	return r.FindPodByName(namespace, h)
+	return r.FindPodByName(ctx, namespace, h)
 }

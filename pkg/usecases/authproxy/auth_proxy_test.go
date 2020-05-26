@@ -64,7 +64,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				Return(transitPort, nil)
 			mockResolver := mock_resolver.NewMockInterface(ctrl)
 			mockResolver.EXPECT().
-				FindPodByName("NAMESPACE", "podname").
+				FindPodByName(gomock.Any(), "NAMESPACE", "podname").
 				Return(pod, containerPort, nil)
 			m.resolverFactory.EXPECT().
 				New(&restConfig).
@@ -322,7 +322,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				Return(transitPort, nil)
 			mockResolver := mock_resolver.NewMockInterface(ctrl)
 			mockResolver.EXPECT().
-				FindPodByServiceName("NAMESPACE", "servicename").
+				FindPodByServiceName(gomock.Any(), "NAMESPACE", "servicename").
 				Return(pod, containerPort, nil)
 			m.resolverFactory.EXPECT().
 				New(&restConfig).
