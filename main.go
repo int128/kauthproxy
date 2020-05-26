@@ -6,6 +6,9 @@ import (
 	"os/signal"
 
 	"github.com/int128/kauthproxy/pkg/di"
+
+	// for an AKS cluster integrated with Azure AD
+	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
 )
 
 var version = "v0.0.0"
