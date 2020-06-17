@@ -12,8 +12,8 @@ require (
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
-	k8s.io/api v0.18.3
-	k8s.io/apimachinery v0.18.3
+	k8s.io/api v0.18.4
+	k8s.io/apimachinery v0.18.4
 	k8s.io/cli-runtime v0.18.3
 	k8s.io/client-go v0.18.3
 	k8s.io/klog v1.0.0
