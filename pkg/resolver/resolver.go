@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/wire"
-	"github.com/int128/kauthproxy/pkg/adaptors/logger"
+	"github.com/int128/kauthproxy/pkg/logger"
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,7 +21,7 @@ var Set = wire.NewSet(
 	wire.Bind(new(FactoryInterface), new(*Factory)),
 )
 
-//go:generate mockgen -destination mock_resolver/mock_resolver.go github.com/int128/kauthproxy/pkg/adaptors/resolver FactoryInterface,Interface
+//go:generate mockgen -destination mock_resolver/mock_resolver.go github.com/int128/kauthproxy/pkg/resolver FactoryInterface,Interface
 
 type FactoryInterface interface {
 	New(config *rest.Config) (Interface, error)
