@@ -3,7 +3,7 @@ package mock_logger
 import (
 	"time"
 
-	logger2 "github.com/int128/kauthproxy/pkg/adaptors/logger"
+	logger2 "github.com/int128/kauthproxy/pkg/logger"
 	"github.com/spf13/pflag"
 )
 

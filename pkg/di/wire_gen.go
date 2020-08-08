@@ -6,15 +6,15 @@
 package di
 
 import (
-	"github.com/int128/kauthproxy/pkg/adaptors/browser"
-	"github.com/int128/kauthproxy/pkg/adaptors/cmd"
-	"github.com/int128/kauthproxy/pkg/adaptors/env"
-	"github.com/int128/kauthproxy/pkg/adaptors/logger"
-	"github.com/int128/kauthproxy/pkg/adaptors/portforwarder"
-	"github.com/int128/kauthproxy/pkg/adaptors/resolver"
-	"github.com/int128/kauthproxy/pkg/adaptors/reverseproxy"
-	"github.com/int128/kauthproxy/pkg/adaptors/transport"
-	"github.com/int128/kauthproxy/pkg/usecases/authproxy"
+	"github.com/int128/kauthproxy/pkg/authproxy"
+	"github.com/int128/kauthproxy/pkg/browser"
+	"github.com/int128/kauthproxy/pkg/cmd"
+	"github.com/int128/kauthproxy/pkg/env"
+	"github.com/int128/kauthproxy/pkg/logger"
+	"github.com/int128/kauthproxy/pkg/portforwarder"
+	"github.com/int128/kauthproxy/pkg/resolver"
+	"github.com/int128/kauthproxy/pkg/reverseproxy"
+	"github.com/int128/kauthproxy/pkg/transport"
 )
 
 // Injectors from di.go:
