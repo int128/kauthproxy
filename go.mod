@@ -14,7 +14,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	k8s.io/api v0.18.6
 	k8s.io/apimachinery v0.18.6
-	k8s.io/cli-runtime v0.18.5
+	k8s.io/cli-runtime v0.18.6
 	k8s.io/client-go v0.18.6
 	k8s.io/klog v1.0.0
 )
