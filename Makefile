@@ -1,5 +1,10 @@
-TARGET := kauthproxy
+# CircleCI specific variables
 CIRCLE_TAG ?= latest
+GITHUB_USERNAME := $(CIRCLE_PROJECT_USERNAME)
+GITHUB_REPONAME := $(CIRCLE_PROJECT_REPONAME)
+
+TARGET := kauthproxy
+VERSION ?= $(CIRCLE_TAG)
 LDFLAGS := -X main.version=$(CIRCLE_TAG)
 
 .PHONY: all
@@ -26,14 +31,13 @@ dist/output:
 
 .PHONY: release
 release: dist
-	# publish to GitHub Releases
-	ghcp release -u "$(CIRCLE_PROJECT_USERNAME)" -r "$(CIRCLE_PROJECT_REPONAME)" -t "$(CIRCLE_TAG)" dist/output/
-	# publish to Homebrew tap repository
-	ghcp commit -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -b "bump-$(CIRCLE_TAG)" -m "Bump version to $(CIRCLE_TAG)" -C dist/output/ kauthproxy.rb
-	# create a pull request
-	ghcp pull-request -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -b "bump-$(CIRCLE_TAG)" --title "Bump version to $(CIRCLE_TAG)"
-	# fork krew-index and create a branch
-	ghcp fork-commit -u kubernetes-sigs -r krew-index -b "auth-proxy-$(CIRCLE_TAG)" -m "Bump auth-proxy to $(CIRCLE_TAG)" -C dist/output/ plugins/auth-proxy.yaml
+	# publish the binaries
+	ghcp release -u "$(GITHUB_USERNAME)" -r "$(GITHUB_REPONAME)" -t "$(VERSION)" dist/output/
+	# publish the Homebrew formula
+	ghcp commit -u "$(GITHUB_USERNAME)" -r "homebrew-$(GITHUB_REPONAME)" -b "bump-$(VERSION)" -m "Bump the version to $(VERSION)" -C dist/output/ kauthproxy.rb
+	ghcp pull-request -u "$(GITHUB_USERNAME)" -r "homebrew-$(GITHUB_REPONAME)" -b "bump-$(VERSION)" --title "Bump the version to $(VERSION)"
+	# publish the Krew manifest
+	ghcp fork-commit -u kubernetes-sigs -r krew-index -b "auth-proxy-$(VERSION)" -m "Bump auth-proxy to $(VERSION)" -C dist/output/ plugins/auth-proxy.yaml
 
 .PHONY: clean
 clean:
