@@ -115,3 +115,40 @@ Flags:
 
 This is an open source software.
 Feel free to open issues and pull requests.
+
+### End-to-end test
+
+To provision a cluster:
+
+```sh
+# requires Docker, Kind and Chrome
+brew cask install docker google-chrome
+brew install kind
+
+# provision a cluster and deploy Kubernetes Dashboard
+make -C e2e_test deploy
+```
+
+You can access the cluster as follows:
+
+```sh
+export KUBECONFIG=e2e_test/output/kubeconfig.yaml
+
+# show all pods
+kubectl get pods -A
+
+# open Kubernetes Dashboard
+./kauthproxy -n kubernetes-dashboard --user=tester https://kubernetes-dashboard.svc
+```
+
+To run the automated test:
+
+```sh
+make -C e2e_test test
+```
+
+To delete the cluster.
+
+```sh
+make -C e2e_test delete-cluster
+```
