@@ -49,6 +49,7 @@ type Option struct {
 	Namespace             string
 	TargetURL             *url.URL
 	BindAddressCandidates []string
+	SkipOpenBrowser       bool
 }
 
 // Do runs the use-case.
@@ -75,23 +76,28 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 		return xerrors.Errorf("could not create a transport for reverse proxy: %w", err)
 	}
 	u.Logger.V(1).Infof("client -> reverse_proxy -> port_forwarder:%d -> pod -> container:%d", transitPort, containerPort)
-	pfo := portforwarder.Option{
-		Config:              o.Config,
-		SourcePort:          transitPort,
-		TargetPodURL:        pod.GetSelfLink(),
-		TargetContainerPort: containerPort,
-	}
-	rpo := reverseproxy.Option{
-		Transport:             rpTransport,
-		BindAddressCandidates: o.BindAddressCandidates,
-		TargetScheme:          o.TargetURL.Scheme,
-		TargetHost:            "localhost",
-		TargetPort:            transitPort,
-	}
+
 	var once sync.Once
+	ro := runOption{
+		portForwarderOption: portforwarder.Option{
+			Config:              o.Config,
+			SourcePort:          transitPort,
+			TargetPodURL:        pod.GetSelfLink(),
+			TargetContainerPort: containerPort,
+		},
+		reverseProxyOption: reverseproxy.Option{
+			Transport:             rpTransport,
+			BindAddressCandidates: o.BindAddressCandidates,
+			TargetScheme:          o.TargetURL.Scheme,
+			TargetHost:            "localhost",
+			TargetPort:            transitPort,
+		},
+		skipOpenBrowser: o.SkipOpenBrowser,
+		onceOpenBrowser: &once,
+	}
 	b := backoff.NewExponentialBackOff()
 	if err := backoff.Retry(func() error {
-		if err := u.run(ctx, pfo, rpo, &once); err != nil {
+		if err := u.run(ctx, ro); err != nil {
 			if xerrors.Is(err, portForwarderConnectionLostError) {
 				u.Logger.Printf("retrying: %s", err)
 				return err
@@ -103,6 +109,13 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 		return xerrors.Errorf("retry over: %w", err)
 	}
 	return nil
+}
+
+type runOption struct {
+	portForwarderOption portforwarder.Option
+	reverseProxyOption  reverseproxy.Option
+	skipOpenBrowser     bool
+	onceOpenBrowser     *sync.Once
 }
 
 // run runs a port forwarder and reverse proxy, and waits for them, as follows:
@@ -119,7 +132,7 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 // This never returns nil.
 // It returns an error which wraps context.Canceled if the context is canceled.
 // It returns portForwarderConnectionLostError if a connection has lost.
-func (u *AuthProxy) run(ctx context.Context, pfo portforwarder.Option, rpo reverseproxy.Option, once *sync.Once) error {
+func (u *AuthProxy) run(ctx context.Context, o runOption) error {
 	portForwarderIsReady := make(chan struct{})
 	reverseProxyIsReady := make(chan reverseproxy.Instance, 1)
 	stopPortForwarder := make(chan struct{})
@@ -129,7 +142,7 @@ func (u *AuthProxy) run(ctx context.Context, pfo portforwarder.Option, rpo rever
 	// start a port forwarder
 	eg.Go(func() error {
 		u.Logger.V(1).Infof("starting a port forwarder")
-		if err := u.PortForwarder.Run(pfo, portForwarderIsReady, stopPortForwarder); err != nil {
+		if err := u.PortForwarder.Run(o.portForwarderOption, portForwarderIsReady, stopPortForwarder); err != nil {
 			return xerrors.Errorf("could not run a port forwarder: %w", err)
 		}
 		u.Logger.V(1).Infof("stopped the port forwarder")
@@ -151,7 +164,7 @@ func (u *AuthProxy) run(ctx context.Context, pfo portforwarder.Option, rpo rever
 		select {
 		case <-portForwarderIsReady:
 			u.Logger.V(1).Infof("starting a reverse proxy")
-			if err := u.ReverseProxy.Run(rpo, reverseProxyIsReady); err != nil {
+			if err := u.ReverseProxy.Run(o.reverseProxyOption, reverseProxyIsReady); err != nil {
 				return xerrors.Errorf("could not run a reverse proxy: %w", err)
 			}
 			u.Logger.V(1).Infof("stopped the reverse proxy")
@@ -168,12 +181,16 @@ func (u *AuthProxy) run(ctx context.Context, pfo portforwarder.Option, rpo rever
 		case rp := <-reverseProxyIsReady:
 			u.Logger.V(1).Infof("the reverse proxy is ready")
 			rpURL := rp.URL().String()
-			u.Logger.Printf("Open %s", rpURL)
-			once.Do(func() {
-				if err := u.Browser.Open(rpURL); err != nil {
-					u.Logger.Printf("error while opening the browser: %s", err)
-				}
-			})
+			if o.skipOpenBrowser {
+				u.Logger.Printf("Please open %s in the browser", rpURL)
+			} else {
+				o.onceOpenBrowser.Do(func() {
+					u.Logger.V(1).Infof("opening %s in the browser", rpURL)
+					if err := u.Browser.Open(rpURL); err != nil {
+						u.Logger.Printf("Please open %s in the browser (could not open the browser: %s)", rpURL, err)
+					}
+				})
+			}
 			// shutdown the reverse proxy when the context is done
 			eg.Go(func() error {
 				<-ctx.Done()

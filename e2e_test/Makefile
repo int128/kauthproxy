@@ -27,8 +27,7 @@ deploy: cluster
 
 .PHONY: test
 test: main.go
-	#TODO: add an option to skip opening the browser
-	BROWSER=/bin/true go run main.go
+	go run main.go
 
 .PHONY: delete-cluster
 delete-cluster:
