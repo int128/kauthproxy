@@ -3,3 +3,5 @@
 /dist/output
 /coverage.out
 /kauthproxy
+
+/e2e_test/output
