@@ -57,11 +57,13 @@ func (cmd *Cmd) Run(ctx context.Context, osArgs []string, version string) int {
 type rootCmdOptions struct {
 	k8sOptions        *genericclioptions.ConfigFlags
 	addressCandidates []string
+	skipOpenBrowser   bool
 }
 
 func (o *rootCmdOptions) addFlags(f *pflag.FlagSet) {
 	o.k8sOptions.AddFlags(f)
 	f.StringArrayVar(&o.addressCandidates, "address", defaultAddress, "The address on which to run the proxy. If set multiple times, it will try binding the address in order")
+	f.BoolVar(&o.skipOpenBrowser, "skip-open-browser", false, "If set, skip opening the browser")
 }
 
 func (cmd *Cmd) newRootCmd() *cobra.Command {
@@ -108,6 +110,7 @@ func (cmd *Cmd) runRootCmd(ctx context.Context, o rootCmdOptions, args []string)
 		Namespace:             namespace,
 		TargetURL:             remoteURL,
 		BindAddressCandidates: o.addressCandidates,
+		SkipOpenBrowser:       o.skipOpenBrowser,
 	}
 	if err := cmd.AuthProxy.Do(ctx, authProxyOption); err != nil {
 		return xerrors.Errorf("could not run an authentication proxy: %w", err)

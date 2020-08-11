@@ -41,6 +41,7 @@ func runKauthproxy(chInterrupt <-chan struct{}) error {
 	c := exec.Command("../kauthproxy",
 		"--namespace=kubernetes-dashboard",
 		"--user=tester",
+		"--skip-open-browser",
 		"https://kubernetes-dashboard.svc",
 	)
 	c.Stdout = os.Stdout
