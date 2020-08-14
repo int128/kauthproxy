@@ -40,10 +40,10 @@ func newTransport(t *testing.T) transport.NewFunc {
 func TestAuthProxy_Do(t *testing.T) {
 	const containerPort = 18888
 	const transitPort = 28888
-	const podURL = "/api/v1/namespaces/kube-system/pods/kubernetes-dashboard-xxxxxxxx-xxxxxxxx"
 	pod := &v1.Pod{
 		ObjectMeta: v1meta.ObjectMeta{
-			SelfLink: podURL,
+			Name:      "kubernetes-dashboard-12345678-12345678",
+			Namespace: "kubernetes-dashboard",
 		},
 	}
 
@@ -83,7 +83,8 @@ func TestAuthProxy_Do(t *testing.T) {
 				Run(portforwarder.Option{
 					Config:              &restConfig,
 					SourcePort:          transitPort,
-					TargetPodURL:        podURL,
+					TargetNamespace:     "kubernetes-dashboard",
+					TargetPodName:       "kubernetes-dashboard-12345678-12345678",
 					TargetContainerPort: containerPort,
 				}, notNil, notNil).
 				DoAndReturn(func(o portforwarder.Option, readyChan chan struct{}, stopChan <-chan struct{}) error {
@@ -147,7 +148,8 @@ func TestAuthProxy_Do(t *testing.T) {
 				Run(portforwarder.Option{
 					Config:              &restConfig,
 					SourcePort:          transitPort,
-					TargetPodURL:        podURL,
+					TargetNamespace:     "kubernetes-dashboard",
+					TargetPodName:       "kubernetes-dashboard-12345678-12345678",
 					TargetContainerPort: containerPort,
 				}, notNil, notNil).
 				DoAndReturn(func(o portforwarder.Option, readyChan chan struct{}, stopChan <-chan struct{}) error {
@@ -186,7 +188,8 @@ func TestAuthProxy_Do(t *testing.T) {
 				Run(portforwarder.Option{
 					Config:              &restConfig,
 					SourcePort:          transitPort,
-					TargetPodURL:        podURL,
+					TargetNamespace:     "kubernetes-dashboard",
+					TargetPodName:       "kubernetes-dashboard-12345678-12345678",
 					TargetContainerPort: containerPort,
 				}, notNil, notNil).
 				DoAndReturn(func(o portforwarder.Option, readyChan chan struct{}, stopChan <-chan struct{}) error {
@@ -249,7 +252,8 @@ func TestAuthProxy_Do(t *testing.T) {
 				Run(portforwarder.Option{
 					Config:              &restConfig,
 					SourcePort:          transitPort,
-					TargetPodURL:        podURL,
+					TargetNamespace:     "kubernetes-dashboard",
+					TargetPodName:       "kubernetes-dashboard-12345678-12345678",
 					TargetContainerPort: containerPort,
 				}, notNil, notNil).
 				DoAndReturn(func(o portforwarder.Option, readyChan chan struct{}, stopChan <-chan struct{}) error {
@@ -340,7 +344,8 @@ func TestAuthProxy_Do(t *testing.T) {
 				Run(portforwarder.Option{
 					Config:              &restConfig,
 					SourcePort:          transitPort,
-					TargetPodURL:        podURL,
+					TargetNamespace:     "kubernetes-dashboard",
+					TargetPodName:       "kubernetes-dashboard-12345678-12345678",
 					TargetContainerPort: containerPort,
 				}, notNil, notNil).
 				DoAndReturn(func(o portforwarder.Option, readyChan chan struct{}, stopChan <-chan struct{}) error {
