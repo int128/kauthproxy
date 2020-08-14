@@ -37,23 +37,14 @@ When you access the Kubernetes Dashboard, the kauthproxy forwards HTTP requests 
 Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kauthproxy/releases).
 
 ```sh
-# Homebrew
+# Homebrew (macOS)
 brew install int128/kauthproxy/kauthproxy
 
-# Krew
+# Krew (macOS, Linux and Windows)
 kubectl krew install auth-proxy
-
-# GitHub Releases
-curl -LO https://github.com/int128/kauthproxy/releases/download/v1.0.0/kauthproxy_linux_amd64.zip
-unzip kauthproxy_linux_amd64.zip
-ln -s kauthproxy kubectl-auth_proxy
 ```
 
-You can deploy the Kubernetes Dashboard to the cluster from [the chart](https://github.com/kubernetes/charts/tree/master/stable/kubernetes-dashboard).
-
-```sh
-helm install stable/kubernetes-dashboard --namespace kube-system --name kubernetes-dashboard
-```
+You can deploy the manifest of Kubernetes Dashboard from [here](https://github.com/kubernetes/dashboard).
 
 ### Run
 
