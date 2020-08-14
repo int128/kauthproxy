@@ -1,4 +1,10 @@
-on: [push]
+on:
+  push:
+    paths:
+      - .github/workflows/**
+      - pkg/**
+      - e2e_test/**
+      - go.*
 jobs:
   e2e-test:
     # https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners#ubuntu-1804-lts
