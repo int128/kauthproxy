@@ -82,7 +82,8 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 		portForwarderOption: portforwarder.Option{
 			Config:              o.Config,
 			SourcePort:          transitPort,
-			TargetPodURL:        pod.GetSelfLink(),
+			TargetNamespace:     pod.Namespace,
+			TargetPodName:       pod.Name,
 			TargetContainerPort: containerPort,
 		},
 		reverseProxyOption: reverseproxy.Option{

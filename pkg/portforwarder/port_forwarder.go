@@ -25,7 +25,8 @@ var Set = wire.NewSet(
 type Option struct {
 	Config              *rest.Config
 	SourcePort          int
-	TargetPodURL        string
+	TargetNamespace     string
+	TargetPodName       string
 	TargetContainerPort int
 }
 
@@ -44,7 +45,7 @@ type PortForwarder struct {
 // It will close the readyChan when the port forwarder is ready.
 // Caller can stop the port forwarder by closing the stopChan.
 func (pf *PortForwarder) Run(o Option, readyChan chan struct{}, stopChan <-chan struct{}) error {
-	pfURL, err := url.Parse(o.Config.Host + o.TargetPodURL + "/portforward")
+	pfURL, err := url.Parse(fmt.Sprintf("%s/api/v1/namespaces/%s/pods/%s/portforward", o.Config.Host, o.TargetNamespace, o.TargetPodName))
 	if err != nil {
 		return xerrors.Errorf("could not build URL for portforward: %w", err)
 	}
