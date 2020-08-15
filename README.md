@@ -1,38 +1,32 @@
 # kauthproxy [![CircleCI](https://circleci.com/gh/int128/kauthproxy.svg?style=shield)](https://circleci.com/gh/int128/kauthproxy)
 
-This is a kubectl plugin of the authentication proxy, especially for accessing the [Kubernetes Dashboard](https://github.com/kubernetes/dashboard).
+This is a kubectl plugin of the authentication proxy to access [Kubernetes Dashboard](https://github.com/kubernetes/dashboard).
 
+You can access Kubernetes Dashboard without entering your token.
+It allows better **user experience and security**.
 
-## Purpose
+In the tutorial of Kubernetes Dashboard, it creates a service account and enter the token in Kubernetes Dashboard.
+You should not share a service account in your organization, for the following reasons:
 
-In the tutorial of Kubernetes Dashboard, it creates a service account and enter the token in the login view.
-It is **not recommended to share a service account in your team** for the security reasons, for example,
+1. Access control per user
+1. Audit logging
+1. No token rotation
+1. Revoke a user
 
-1. It breaks access control per user.
-1. It breaks audit logging.
-1. It needs a safe transport to share the token to newcomers. (onboarding)
-1. It cannot revoke users who have left the team. (offboarding)
-
-It is **best practice to use your own token**.
-
-Kubernetes Dashboard supports [the header based authentication](https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/README.md#authorization-header).
-You can use OpenID Connect (e.g. [kubelogin](https://github.com/int128/kubelogin)) or cloud provider based authentication (e.g. [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) or Azure AD).
-
-The kauthproxy is a kubectl plugin which provides the reverse proxy and port forwarder.
-Take a look at the diagram:
-
-![diagram](docs/kauthproxy.svg)
-
-When you access the Kubernetes Dashboard, the kauthproxy forwards HTTP requests by the following process:
-
-1. Acquire your token from the credential plugin or authentication provider.
-   The token is cached and will be refreshed on expiration.
-1. Set `authorization: bearer TOKEN` header to a request and forward the request to the pod of Kubernetes Dashboard.
+Using kauthproxy, you can access Kubernetes Dashboard with authentication.
 
 
 ## Getting Started
 
-### Set up
+kauthproxy supports the following environments:
+
+- Self-hosted Kubernetes cluster
+  - OpenID Connect authentication
+  - [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator)
+- Amazon EKS
+- Azure Kubernetes Service (integrated with Azure AD)
+
+### Install
 
 Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kauthproxy/releases).
 
@@ -48,18 +42,34 @@ You can deploy the manifest of Kubernetes Dashboard from [here](https://github.c
 
 ### Run
 
-To access the Kubernetes Dashboard:
+To access Kubernetes Dashboard in your cluster:
 
 ```
-% kubectl auth-proxy -n kube-system https://kubernetes-dashboard.svc
+% kubectl auth-proxy -n kubernetes-dashboard https://kubernetes-dashboard.svc
 Starting an authentication proxy for pod/kubernetes-dashboard-57fc4fcb74-jjg77:8443
 Open http://127.0.0.1:18000
 Forwarding from 127.0.0.1:57866 -> 8443
 Forwarding from [::1]:57866 -> 8443
 ```
 
-It will automatically open the browser and show the Kubernetes Dashboard logged in as you.
+It will automatically open the browser and you will see Kubernetes Dashboard logged in as you.
 You do not need to enter your token.
+
+
+## How it works
+
+Kubernetes Dashboard supports [header based authentication](https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/README.md#authorization-header).
+kauthproxy forwards HTTP requests from the browser to Kubernetes Dashboard.
+
+Take a look at the diagram:
+
+![diagram](docs/kauthproxy.svg)
+
+When you access Kubernetes Dashboard, kauthproxy forwards HTTP requests by the following process:
+
+1. Acquire your token from the credential plugin or authentication provider.
+   The token is cached and will be refreshed when it expires.
+1. Set `authorization: bearer TOKEN` header to a request and forward the request to the pod.
 
 
 ## Usage
