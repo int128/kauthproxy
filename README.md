@@ -2,29 +2,23 @@
 
 This is a kubectl plugin of the authentication proxy to access [Kubernetes Dashboard](https://github.com/kubernetes/dashboard).
 
-You can access Kubernetes Dashboard without entering your token.
-It allows better **user experience and security**.
-
-In the tutorial of Kubernetes Dashboard, it creates a service account and enter the token in Kubernetes Dashboard.
-You should not share a service account in your organization, for the following reasons:
-
-1. Access control per user
-1. Audit logging
-1. No token rotation
-1. Revoke a user
-
-Using kauthproxy, you can access Kubernetes Dashboard with authentication.
-
-
-## Getting Started
+This allows you access Kubernetes Dashboard with authentication.
+You no longer need to [enter a service account token in Kubernetes Dashboard](https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md).
+It provides better **user experience and security**.
 
 kauthproxy supports the following environments:
 
-- Self-hosted Kubernetes cluster
-  - OpenID Connect authentication
-  - [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator)
 - Amazon EKS
-- Azure Kubernetes Service (integrated with Azure AD)
+- Azure Kubernetes Service (with Azure AD)
+- Self-hosted Kubernetes cluster
+  - [OpenID Connect tokens authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens)
+  - [Webhook token authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#webhook-token-authentication)
+  - [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator)
+
+Note that kauthproxy does not work with [client certificate authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certs).
+
+
+## Getting Started
 
 ### Install
 
