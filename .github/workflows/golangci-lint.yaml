@@ -2,9 +2,7 @@ on:
   push:
     paths:
       - .github/workflows/golangci-lint.yaml
-      - pkg/**
-      - e2e_test/**
-      - go.*
+      - '**.go'
 jobs:
   golangci:
     name: lint
