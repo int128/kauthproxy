@@ -1,4 +1,4 @@
-# kauthproxy [![CircleCI](https://circleci.com/gh/int128/kauthproxy.svg?style=shield)](https://circleci.com/gh/int128/kauthproxy)
+# kauthproxy [![CircleCI](https://circleci.com/gh/int128/kauthproxy.svg?style=shield)](https://circleci.com/gh/int128/kauthproxy) ![e2e-test](https://github.com/int128/kauthproxy/workflows/e2e-test/badge.svg)
 
 This is a kubectl plugin of the authentication proxy to access [Kubernetes Dashboard](https://github.com/kubernetes/dashboard).
 
