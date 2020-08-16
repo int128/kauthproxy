@@ -1,7 +1,7 @@
 on:
   push:
     paths:
-      - .github/workflows/**
+      - .github/workflows/e2e-test.yaml
       - pkg/**
       - e2e_test/**
       - go.*

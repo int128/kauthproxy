@@ -1,0 +1,16 @@
+on:
+  push:
+    paths:
+      - .github/workflows/golangci-lint.yaml
+      - pkg/**
+      - e2e_test/**
+      - go.*
+jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: golangci/golangci-lint-action@v1
+        with:
+          version: v1.30
