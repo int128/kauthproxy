@@ -59,9 +59,9 @@ type Option struct {
 // It returns an error which wraps context.Canceled if the context is canceled.
 func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 	rsv, err := u.ResolverFactory.New(o.Config)
-	if err != nil {
-		return xerrors.Errorf("could not create a resolver: %w", err)
-	}
+	//if err != nil {
+	//	return xerrors.Errorf("could not create a resolver: %w", err)
+	//}
 	pod, containerPort, err := parseTargetURL(ctx, rsv, o.Namespace, o.TargetURL)
 	if err != nil {
 		return xerrors.Errorf("could not find the pod and container port: %w", err)
