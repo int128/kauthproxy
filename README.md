@@ -2,7 +2,7 @@
 
 This is a kubectl plugin of the authentication proxy to access [Kubernetes Dashboard](https://github.com/kubernetes/dashboard).
 
-This allows you access Kubernetes Dashboard with authentication.
+This allows you to access Kubernetes Dashboard with authentication.
 You no longer need to [enter a service account token in Kubernetes Dashboard](https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md).
 It provides better **user experience and security**.
 
@@ -46,7 +46,7 @@ Forwarding from 127.0.0.1:57866 -> 8443
 Forwarding from [::1]:57866 -> 8443
 ```
 
-It will automatically open the browser and you will see Kubernetes Dashboard logged in as you.
+It will automatically open the browser, and you will see Kubernetes Dashboard logged in as you.
 You do not need to enter your token.
 
 
@@ -64,7 +64,6 @@ Take a look at the diagram:
 When you access Kubernetes Dashboard, kauthproxy forwards HTTP requests by the following process:
 
 1. Acquire your token from the credential plugin or authentication provider.
-   The token is cached and will be refreshed when it expires.
 1. Set `authorization: bearer TOKEN` header to a request and forward the request to the pod.
 
 ### Authorization
