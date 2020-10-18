@@ -52,6 +52,8 @@ You do not need to enter your token.
 
 ## How it works
 
+### Authentication
+
 Kubernetes Dashboard supports [header based authentication](https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/README.md#authorization-header).
 kauthproxy forwards HTTP requests from the browser to Kubernetes Dashboard.
 
@@ -64,6 +66,17 @@ When you access Kubernetes Dashboard, kauthproxy forwards HTTP requests by the f
 1. Acquire your token from the credential plugin or authentication provider.
    The token is cached and will be refreshed when it expires.
 1. Set `authorization: bearer TOKEN` header to a request and forward the request to the pod.
+
+### Authorization
+
+kauthproxy requires the following privileges:
+
+- Get the Service of Kubernetes Dashboard.
+- List the Pods of Kubernetes Dashboard.
+- Port-forward to the Pod of Kubernetes Dashboard.
+
+If you need to assign the least privilege for production,
+see [an example of `Role`](e2e_test/kauthproxy-role.yaml).
 
 
 ## Usage
