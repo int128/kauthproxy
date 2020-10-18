@@ -3,7 +3,9 @@ KUBECONFIG := output/kubeconfig.yaml
 export KUBECONFIG
 
 .PHONY: all
-all: deploy
+all:
+	$(MAKE) deploy
+	$(MAKE) test
 
 .PHONY: cluster
 cluster: $(KUBECONFIG)
@@ -19,11 +21,9 @@ deploy: cluster
 	kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.3.7/components.yaml
 	kubectl -n kube-system patch --type=json -p '[{"op": "add", "path": "/spec/template/spec/containers/0/args/0", "value": "--kubelet-insecure-tls"}]' deployment metrics-server
 	kubectl -n kube-system rollout status deployment metrics-server
-	# Create a service account for token authentication,
-	# because kind provides cluster-admin with certificate authentication but kauthproxy requires token authentication
-	kubectl create serviceaccount tester
-	kubectl create clusterrolebinding tester --clusterrole=cluster-admin --serviceaccount=default:tester
-	kubectl config set-credentials tester --token=$$(kubectl get secret $$(kubectl get serviceaccount tester '-ojsonpath={.secrets[0].name}') '-ojsonpath={.data.token}' | base64 --decode)
+	# Create a service account for end-to-end test
+	kubectl apply -f kauthproxy-role.yaml
+	kubectl get serviceaccount tester '-ojsonpath={.secrets[0].name}' | xargs kubectl get secret '-ojsonpath={.data.token}' | base64 --decode | xargs kubectl config set-credentials tester --token
 
 .PHONY: test
 test: main.go

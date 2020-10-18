@@ -23,5 +23,4 @@ jobs:
           restore-keys: |
             go-
       - run: make
-      - run: make -C e2e_test deploy
-      - run: make -C e2e_test test
+      - run: make -C e2e_test
