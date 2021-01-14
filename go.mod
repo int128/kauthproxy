@@ -13,10 +13,10 @@ require (
 	github.com/spf13/cobra v1.1.0
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
-	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
-	k8s.io/api v0.19.2
-	k8s.io/apimachinery v0.19.2
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
+	k8s.io/api v0.20.2
+	k8s.io/apimachinery v0.20.2
 	k8s.io/cli-runtime v0.19.2
-	k8s.io/client-go v0.19.2
+	k8s.io/client-go v0.20.2
 	k8s.io/klog v1.0.0
 )
