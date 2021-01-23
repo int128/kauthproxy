@@ -13,8 +13,15 @@
   ],
   "regexManagers": [
     {
-      "fileMatch": ["Makefile"],
-      "matchStrings": ["# renovate: depName=(?<depName>.*?)\\s.*?_VERSION := (?<currentValue>.*?)\\s"],
+      "fileMatch": ["kustomization.yaml"],
+      "matchStrings": ["https://raw.githubusercontent.com/kubernetes/dashboard/(?<currentValue>.*)/aio/deploy/recommended.yaml"],
+      "depNameTemplate": "kubernetes/dashboard",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "fileMatch": ["kustomization.yaml"],
+      "matchStrings": ["https://github.com/kubernetes-sigs/metrics-server/releases/download/(?<currentValue>.*)/components.yaml"],
+      "depNameTemplate": "kubernetes-sigs/metrics-server",
       "datasourceTemplate": "github-releases"
     }
   ]
