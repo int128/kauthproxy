@@ -1,0 +1,9 @@
+resources:
+  # https://github.com/kubernetes/dashboard
+  - https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.3/aio/deploy/recommended.yaml
+  # https://github.com/kubernetes-sigs/metrics-server
+  - https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.3.7/components.yaml
+  # Service account for end-to-end test
+  - kauthproxy-role.yaml
+patchesStrategicMerge:
+  - metrics-server-patch.yaml
