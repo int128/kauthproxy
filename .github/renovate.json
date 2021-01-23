@@ -10,5 +10,12 @@
   ],
   "postUpdateOptions": [
     "gomodTidy"
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": ["Makefile"],
+      "matchStrings": ["_VERSION := (?<currentValue>.*?) # renovate: depName=(?<depName>.*?)\\n"],
+      "datasourceTemplate": "github-releases"
+    }
   ]
 }
