@@ -14,7 +14,7 @@
   "regexManagers": [
     {
       "fileMatch": ["Makefile"],
-      "matchStrings": ["_VERSION := (?<currentValue>.*?) # renovate: depName=(?<depName>.*?)\\n"],
+      "matchStrings": ["# renovate: depName=(?<depName>.*?)\\s.*?_VERSION := (?<currentValue>.*?)\\s"],
       "datasourceTemplate": "github-releases"
     }
   ]

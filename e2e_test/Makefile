@@ -2,8 +2,10 @@ CLUSTER_NAME := kauthproxy-e2e
 KUBECONFIG := output/kubeconfig.yaml
 export KUBECONFIG
 
-KUBERNETES_DASHBOARD_VERSION := v2.0.3 # renovate: depName=kubernetes/dashboard
-METRICS_SERVER_VERSION := v0.3.7 # renovate: depName=kubernetes-sigs/metrics-server
+# renovate: depName=kubernetes/dashboard
+KUBERNETES_DASHBOARD_VERSION := v2.0.3
+# renovate: depName=kubernetes-sigs/metrics-server
+METRICS_SERVER_VERSION := v0.3.7
 
 .PHONY: all
 all:
