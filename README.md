@@ -2,6 +2,8 @@
 
 This is a kubectl plugin of the authentication proxy to access [Kubernetes Dashboard](https://github.com/kubernetes/dashboard).
 
+![screenshot](https://github.com/int128/kauthproxy/raw/screenshot/screenshot.png)
+
 This allows you to access Kubernetes Dashboard with authentication.
 You no longer need to [enter a service account token in Kubernetes Dashboard](https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md).
 It provides better **user experience and security**.
