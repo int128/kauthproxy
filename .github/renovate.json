@@ -14,14 +14,10 @@
   "regexManagers": [
     {
       "fileMatch": ["kustomization.yaml"],
-      "matchStrings": ["https://raw.githubusercontent.com/kubernetes/dashboard/(?<currentValue>.*)/aio/deploy/recommended.yaml"],
-      "depNameTemplate": "kubernetes/dashboard",
-      "datasourceTemplate": "github-releases"
-    },
-    {
-      "fileMatch": ["kustomization.yaml"],
-      "matchStrings": ["https://github.com/kubernetes-sigs/metrics-server/releases/download/(?<currentValue>.*)/components.yaml"],
-      "depNameTemplate": "kubernetes-sigs/metrics-server",
+      "matchStrings": [
+        "https://raw.githubusercontent.com/(?<depName>.*?)/(?<currentValue>.*)/",
+        "https://github.com/(?<depName>.*?)/releases/download/(?<currentValue>.*)/"
+      ],
       "datasourceTemplate": "github-releases"
     }
   ]
