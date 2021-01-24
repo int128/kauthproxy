@@ -38,7 +38,7 @@ func main() {
 }
 
 func runKauthproxy(chInterrupt <-chan struct{}) error {
-	c := exec.Command("../kauthproxy",
+	c := exec.Command("output/kauthproxy",
 		"--namespace=kubernetes-dashboard",
 		"--user=tester",
 		"--skip-open-browser",
