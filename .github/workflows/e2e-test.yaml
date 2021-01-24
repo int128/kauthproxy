@@ -31,9 +31,13 @@ jobs:
           key: go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             go-
-      - run: make
-      - run: make -C e2e_test
+      - run: make -C e2e_test -j3
       - run: make -C e2e_test ci-publish
         if: github.event_name == 'push'
         env:
           GITHUB_TOKEN: ${{ github.token }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: screenshot
+          path: e2e_test/output/screenshot.png
+          retention-days: 5
