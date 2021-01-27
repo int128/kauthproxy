@@ -7,7 +7,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20210122124816-7a656c010d57
 	github.com/chromedp/chromedp v0.6.5
 	github.com/golang/mock v1.4.4
-	github.com/google/wire v0.4.0
+	github.com/google/wire v0.5.0
 	github.com/int128/listener v1.1.0
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4
 	github.com/spf13/cobra v1.1.0
