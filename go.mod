@@ -10,7 +10,7 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/int128/listener v1.1.0
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4
-	github.com/spf13/cobra v1.1.1
+	github.com/spf13/cobra v1.1.2
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
