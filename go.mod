@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
-	github.com/chromedp/cdproto v0.0.0-20210208055300-32adaa8323b6
+	github.com/chromedp/cdproto v0.0.0-20210211211551-bf465a41a1f9
 	github.com/chromedp/chromedp v0.6.5
 	github.com/golang/mock v1.4.4
 	github.com/google/wire v0.5.0
