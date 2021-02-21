@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/spf13/pflag"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 var Set = wire.NewSet(
