@@ -32,7 +32,6 @@ delete-cluster:
 	kind delete cluster --name $(CLUSTER_NAME)
 	-rm $(KUBECONFIG)
 
-.PHONY: ci-publish
-ci-publish:
-	go install github.com/int128/ghcp
-	ghcp commit -u int128 -r kauthproxy -b screenshot -m "ref: $(GITHUB_SHA)" -C output screenshot.png
+.PHONY: ci-publish-screenshot
+ci-publish-screenshot:
+	./publish-screenshot.sh

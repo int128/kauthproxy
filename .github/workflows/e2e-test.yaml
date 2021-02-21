@@ -32,12 +32,8 @@ jobs:
           restore-keys: |
             go-
       - run: make -C e2e_test -j3
-      - run: make -C e2e_test ci-publish
-        if: github.event_name == 'push'
+      - run: git config --global user.email ci@example.com
+      - run: git config --global user.name ci
+      - run: make -C e2e_test ci-publish-screenshot
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      - uses: actions/upload-artifact@v2
-        with:
-          name: screenshot
-          path: e2e_test/output/screenshot.png
-          retention-days: 5
