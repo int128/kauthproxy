@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/wire"
 	"golang.org/x/xerrors"
+	"k8s.io/client-go/pkg/apis/clientauthentication"
 	"k8s.io/client-go/plugin/pkg/client/auth/exec"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
@@ -26,8 +27,20 @@ func New(c *rest.Config) (http.RoundTripper, error) {
 			Insecure: true,
 		},
 	}
+	// see rest.Config#TransportConfig
+	if c.ExecProvider != nil && c.AuthProvider != nil {
+		return nil, xerrors.New("execProvider and authProvider cannot be used in combination")
+	}
 	if c.ExecProvider != nil {
-		provider, err := exec.GetAuthenticator(c.ExecProvider)
+		var cluster *clientauthentication.Cluster
+		if c.ExecProvider.ProvideClusterInfo {
+			var err error
+			cluster, err = rest.ConfigToExecCluster(c)
+			if err != nil {
+				return nil, err
+			}
+		}
+		provider, err := exec.GetAuthenticator(c.ExecProvider, cluster)
 		if err != nil {
 			return nil, xerrors.Errorf("could not get an authenticator: %w", err)
 		}
