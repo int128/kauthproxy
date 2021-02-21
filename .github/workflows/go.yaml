@@ -1,25 +1,23 @@
-name: e2e-test
+name: go
 
 on:
   push:
     branches:
       - master
     paths:
-      - .github/workflows/e2e-test.yaml
+      - .github/workflows/go.yaml
       - pkg/**
-      - e2e_test/**
       - go.*
   pull_request:
     branches:
       - master
     paths:
-      - .github/workflows/e2e-test.yaml
+      - .github/workflows/go.yaml
       - pkg/**
-      - e2e_test/**
       - go.*
 
 jobs:
-  e2e-test:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -32,9 +30,5 @@ jobs:
           key: go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             go-
-      - run: make -C e2e_test -j3
-      - run: git config --global user.email ci@example.com
-      - run: git config --global user.name ci
-      - run: make -C e2e_test ci-publish-screenshot
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+      - run: make check
+      - uses: codecov/codecov-action@v1

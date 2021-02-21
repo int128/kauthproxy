@@ -10,8 +10,6 @@ jobs:
           keys:
             - go-sum-{{ checksum "go.sum" }}
       - run: make -C .circleci install-deps
-      - run: make check
-      - run: bash <(curl -s https://codecov.io/bash)
       - run: make dist
       - run: |
           if [ "$CIRCLE_TAG" ]; then
