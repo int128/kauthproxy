@@ -32,6 +32,8 @@ jobs:
           restore-keys: |
             go-
       - run: make -C e2e_test -j3
+      - run: git config --global user.email ci@example.com
+      - run: git config --global user.name ci
       - run: make -C e2e_test ci-publish-screenshot
         env:
           GITHUB_TOKEN: ${{ github.token }}
