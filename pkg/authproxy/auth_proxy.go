@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cenkalti/backoff"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/google/wire"
 	"github.com/int128/kauthproxy/pkg/browser"
 	"github.com/int128/kauthproxy/pkg/env"
