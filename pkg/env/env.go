@@ -1,10 +1,10 @@
 package env
 
 import (
+	"fmt"
 	"net"
 
 	"github.com/google/wire"
-	"golang.org/x/xerrors"
 )
 
 var Set = wire.NewSet(
@@ -24,12 +24,12 @@ type Env struct{}
 func (*Env) AllocateLocalPort() (int, error) {
 	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
-		return 0, xerrors.Errorf("could not listen: %w", err)
+		return 0, fmt.Errorf("could not listen: %w", err)
 	}
 	defer l.Close()
 	addr, ok := l.Addr().(*net.TCPAddr)
 	if !ok {
-		return 0, xerrors.Errorf("internal error: unknown type %T", l.Addr())
+		return 0, fmt.Errorf("internal error: unknown type %T", l.Addr())
 	}
 	return addr.Port, nil
 }

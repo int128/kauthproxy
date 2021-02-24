@@ -2,6 +2,7 @@ package authproxy
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/url"
 	"testing"
@@ -17,7 +18,6 @@ import (
 	"github.com/int128/kauthproxy/pkg/reverseproxy"
 	"github.com/int128/kauthproxy/pkg/reverseproxy/mock_reverseproxy"
 	"github.com/int128/kauthproxy/pkg/transport"
-	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
@@ -132,7 +132,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				BindAddressCandidates: []string{"127.0.0.1:8000"},
 			}
 			err := u.Do(ctx, o)
-			if !xerrors.Is(err, context.DeadlineExceeded) {
+			if !errors.Is(err, context.DeadlineExceeded) {
 				t.Errorf("err wants context.DeadlineExceeded but was %+v", err)
 			}
 		})
@@ -142,7 +142,7 @@ func TestAuthProxy_Do(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			portForwarderError := xerrors.New("could not connect to pod")
+			portForwarderError := errors.New("could not connect to pod")
 			portForwarder := mock_portforwarder.NewMockInterface(ctrl)
 			portForwarder.EXPECT().
 				Run(portforwarder.Option{
@@ -173,7 +173,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				BindAddressCandidates: []string{"127.0.0.1:8000"},
 			}
 			err := u.Do(ctx, o)
-			if !xerrors.Is(err, portForwarderError) {
+			if !errors.Is(err, portForwarderError) {
 				t.Errorf("err wants the port forwarder error but was %+v", err)
 			}
 		})
@@ -198,7 +198,7 @@ func TestAuthProxy_Do(t *testing.T) {
 					<-stopChan
 					return nil
 				})
-			reverseProxyError := xerrors.New("could not listen")
+			reverseProxyError := errors.New("could not listen")
 			reverseProxy := mock_reverseproxy.NewMockInterface(ctrl)
 			reverseProxy.EXPECT().
 				Run(reverseproxy.Option{
@@ -228,7 +228,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				BindAddressCandidates: []string{"127.0.0.1:8000"},
 			}
 			err := u.Do(ctx, o)
-			if !xerrors.Is(err, reverseProxyError) {
+			if !errors.Is(err, reverseProxyError) {
 				t.Errorf("err wants the port forwarder error but was %+v", err)
 			}
 		})
@@ -303,7 +303,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				BindAddressCandidates: []string{"127.0.0.1:8000"},
 			}
 			err := u.Do(ctx, o)
-			if !xerrors.Is(err, context.DeadlineExceeded) {
+			if !errors.Is(err, context.DeadlineExceeded) {
 				t.Errorf("err wants context.DeadlineExceeded but was %+v", err)
 			}
 		})
@@ -393,7 +393,7 @@ func TestAuthProxy_Do(t *testing.T) {
 				BindAddressCandidates: []string{"127.0.0.1:8000"},
 			}
 			err := u.Do(ctx, o)
-			if !xerrors.Is(err, context.DeadlineExceeded) {
+			if !errors.Is(err, context.DeadlineExceeded) {
 				t.Errorf("err wants context.DeadlineExceeded but was %+v", err)
 			}
 		})

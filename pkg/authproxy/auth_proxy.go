@@ -2,6 +2,8 @@ package authproxy
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 	"sync"
@@ -16,7 +18,6 @@ import (
 	"github.com/int128/kauthproxy/pkg/reverseproxy"
 	"github.com/int128/kauthproxy/pkg/transport"
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/xerrors"
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 )
@@ -30,7 +31,7 @@ type Interface interface {
 	Do(ctx context.Context, in Option) error
 }
 
-var portForwarderConnectionLostError = xerrors.New("connection lost")
+var portForwarderConnectionLostError = errors.New("connection lost")
 
 // AuthProxy provides a use-case of authentication proxy.
 type AuthProxy struct {
@@ -60,20 +61,20 @@ type Option struct {
 func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 	rsv, err := u.ResolverFactory.New(o.Config)
 	if err != nil {
-		return xerrors.Errorf("could not create a resolver: %w", err)
+		return fmt.Errorf("could not create a resolver: %w", err)
 	}
 	pod, containerPort, err := parseTargetURL(ctx, rsv, o.Namespace, o.TargetURL)
 	if err != nil {
-		return xerrors.Errorf("could not find the pod and container port: %w", err)
+		return fmt.Errorf("could not find the pod and container port: %w", err)
 	}
 	u.Logger.V(1).Infof("found container port %d of pod %s", containerPort, pod.Name)
 	transitPort, err := u.Env.AllocateLocalPort()
 	if err != nil {
-		return xerrors.Errorf("could not allocate a local port: %w", err)
+		return fmt.Errorf("could not allocate a local port: %w", err)
 	}
 	rpTransport, err := u.NewTransport(o.Config)
 	if err != nil {
-		return xerrors.Errorf("could not create a transport for reverse proxy: %w", err)
+		return fmt.Errorf("could not create a transport for reverse proxy: %w", err)
 	}
 	u.Logger.V(1).Infof("client -> reverse_proxy -> port_forwarder:%d -> pod -> container:%d", transitPort, containerPort)
 
@@ -99,7 +100,7 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 	b := backoff.NewExponentialBackOff()
 	if err := backoff.Retry(func() error {
 		if err := u.run(ctx, ro); err != nil {
-			if xerrors.Is(err, portForwarderConnectionLostError) {
+			if errors.Is(err, portForwarderConnectionLostError) {
 				u.Logger.Printf("retrying: %s", err)
 				return err
 			}
@@ -107,7 +108,7 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 		}
 		return nil
 	}, b); err != nil {
-		return xerrors.Errorf("retry over: %w", err)
+		return fmt.Errorf("retry over: %w", err)
 	}
 	return nil
 }
@@ -144,7 +145,7 @@ func (u *AuthProxy) run(ctx context.Context, o runOption) error {
 	eg.Go(func() error {
 		u.Logger.V(1).Infof("starting a port forwarder")
 		if err := u.PortForwarder.Run(o.portForwarderOption, portForwarderIsReady, stopPortForwarder); err != nil {
-			return xerrors.Errorf("could not run a port forwarder: %w", err)
+			return fmt.Errorf("could not run a port forwarder: %w", err)
 		}
 		u.Logger.V(1).Infof("stopped the port forwarder")
 		if ctx.Err() == nil {
@@ -158,7 +159,7 @@ func (u *AuthProxy) run(ctx context.Context, o runOption) error {
 		<-ctx.Done()
 		u.Logger.V(1).Infof("stopping the port forwarder")
 		close(stopPortForwarder)
-		return xerrors.Errorf("context canceled while running the port forwarder: %w", ctx.Err())
+		return fmt.Errorf("context canceled while running the port forwarder: %w", ctx.Err())
 	})
 	// start a reverse proxy when the port forwarder is ready
 	eg.Go(func() error {
@@ -166,13 +167,13 @@ func (u *AuthProxy) run(ctx context.Context, o runOption) error {
 		case <-portForwarderIsReady:
 			u.Logger.V(1).Infof("starting a reverse proxy")
 			if err := u.ReverseProxy.Run(o.reverseProxyOption, reverseProxyIsReady); err != nil {
-				return xerrors.Errorf("could not run a reverse proxy: %w", err)
+				return fmt.Errorf("could not run a reverse proxy: %w", err)
 			}
 			u.Logger.V(1).Infof("stopped the reverse proxy")
 			return nil
 		case <-ctx.Done():
 			u.Logger.V(1).Infof("context canceled before starting reverse proxy")
-			return xerrors.Errorf("context canceled before starting reverse proxy: %w", ctx.Err())
+			return fmt.Errorf("context canceled before starting reverse proxy: %w", ctx.Err())
 		}
 	})
 	// open the browser when the reverse proxy is ready
@@ -197,18 +198,18 @@ func (u *AuthProxy) run(ctx context.Context, o runOption) error {
 				<-ctx.Done()
 				u.Logger.V(1).Infof("shutting down the reverse proxy")
 				if err := rp.Shutdown(context.Background()); err != nil {
-					return xerrors.Errorf("could not shutdown the reverse proxy: %w", err)
+					return fmt.Errorf("could not shutdown the reverse proxy: %w", err)
 				}
-				return xerrors.Errorf("context canceled while running the reverse proxy: %w", ctx.Err())
+				return fmt.Errorf("context canceled while running the reverse proxy: %w", ctx.Err())
 			})
 			return nil
 		case <-ctx.Done():
 			u.Logger.V(1).Infof("context canceled before reverse proxy is ready")
-			return xerrors.Errorf("context canceled before reverse proxy is ready: %w", ctx.Err())
+			return fmt.Errorf("context canceled before reverse proxy is ready: %w", ctx.Err())
 		}
 	})
 	if err := eg.Wait(); err != nil {
-		return xerrors.Errorf("error while running an authentication proxy: %w", err)
+		return fmt.Errorf("error while running an authentication proxy: %w", err)
 	}
 	return nil
 }
