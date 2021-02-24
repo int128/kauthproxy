@@ -1,9 +1,9 @@
 package browser
 
 import (
+	"fmt"
 	"github.com/google/wire"
 	"github.com/pkg/browser"
-	"golang.org/x/xerrors"
 )
 
 var Set = wire.NewSet(
@@ -22,7 +22,7 @@ type Browser struct{}
 // Open opens the default browser.
 func (*Browser) Open(url string) error {
 	if err := browser.OpenURL(url); err != nil {
-		return xerrors.Errorf("could not open the browser: %w", err)
+		return fmt.Errorf("could not open the browser: %w", err)
 	}
 	return nil
 }

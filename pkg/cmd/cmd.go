@@ -3,6 +3,8 @@ package cmd
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/url"
 
 	"github.com/google/wire"
@@ -10,7 +12,6 @@ import (
 	"github.com/int128/kauthproxy/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"golang.org/x/xerrors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
@@ -43,7 +44,7 @@ func (cmd *Cmd) Run(ctx context.Context, osArgs []string, version string) int {
 
 	rootCmd.SetArgs(osArgs[1:])
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
-		if xerrors.Is(err, context.Canceled) {
+		if errors.Is(err, context.Canceled) {
 			cmd.Logger.V(1).Infof("terminating: %s", err)
 			return 0
 		}
@@ -95,15 +96,15 @@ All traffic is routed by the authentication proxy and port forwarder as follows:
 func (cmd *Cmd) runRootCmd(ctx context.Context, o rootCmdOptions, args []string) error {
 	remoteURL, err := url.Parse(args[0])
 	if err != nil {
-		return xerrors.Errorf("invalid remote URL: %w", err)
+		return fmt.Errorf("invalid remote URL: %w", err)
 	}
 	config, err := o.k8sOptions.ToRESTConfig()
 	if err != nil {
-		return xerrors.Errorf("could not load the config: %w", err)
+		return fmt.Errorf("could not load the config: %w", err)
 	}
 	namespace, _, err := o.k8sOptions.ToRawKubeConfigLoader().Namespace()
 	if err != nil {
-		return xerrors.Errorf("could not determine the namespace: %w", err)
+		return fmt.Errorf("could not determine the namespace: %w", err)
 	}
 	authProxyOption := authproxy.Option{
 		Config:                config,
@@ -113,7 +114,7 @@ func (cmd *Cmd) runRootCmd(ctx context.Context, o rootCmdOptions, args []string)
 		SkipOpenBrowser:       o.skipOpenBrowser,
 	}
 	if err := cmd.AuthProxy.Do(ctx, authProxyOption); err != nil {
-		return xerrors.Errorf("could not run an authentication proxy: %w", err)
+		return fmt.Errorf("could not run an authentication proxy: %w", err)
 	}
 	return nil
 }

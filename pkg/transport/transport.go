@@ -2,10 +2,11 @@
 package transport
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/google/wire"
-	"golang.org/x/xerrors"
 	"k8s.io/client-go/pkg/apis/clientauthentication"
 	"k8s.io/client-go/plugin/pkg/client/auth/exec"
 	"k8s.io/client-go/rest"
@@ -29,7 +30,7 @@ func New(c *rest.Config) (http.RoundTripper, error) {
 	}
 	// see rest.Config#TransportConfig
 	if c.ExecProvider != nil && c.AuthProvider != nil {
-		return nil, xerrors.New("execProvider and authProvider cannot be used in combination")
+		return nil, errors.New("execProvider and authProvider cannot be used in combination")
 	}
 	if c.ExecProvider != nil {
 		var cluster *clientauthentication.Cluster
@@ -42,22 +43,22 @@ func New(c *rest.Config) (http.RoundTripper, error) {
 		}
 		provider, err := exec.GetAuthenticator(c.ExecProvider, cluster)
 		if err != nil {
-			return nil, xerrors.Errorf("could not get an authenticator: %w", err)
+			return nil, fmt.Errorf("could not get an authenticator: %w", err)
 		}
 		if err := provider.UpdateTransportConfig(config); err != nil {
-			return nil, xerrors.Errorf("could not update the transport config: %w", err)
+			return nil, fmt.Errorf("could not update the transport config: %w", err)
 		}
 	}
 	if c.AuthProvider != nil {
 		provider, err := rest.GetAuthProvider(c.Host, c.AuthProvider, c.AuthConfigPersister)
 		if err != nil {
-			return nil, xerrors.Errorf("could not get an auth-provider: %w", err)
+			return nil, fmt.Errorf("could not get an auth-provider: %w", err)
 		}
 		config.Wrap(provider.WrapTransport)
 	}
 	t, err := transport.New(config)
 	if err != nil {
-		return nil, xerrors.Errorf("could not create a transport: %w", err)
+		return nil, fmt.Errorf("could not create a transport: %w", err)
 	}
 	return t, nil
 }

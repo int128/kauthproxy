@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/listener"
-	"golang.org/x/xerrors"
 )
 
 var Set = wire.NewSet(
@@ -61,7 +60,7 @@ func (rp *ReverseProxy) Run(o Option, readyChan chan<- Instance) error {
 	}
 	l, err := listener.New(o.BindAddressCandidates)
 	if err != nil {
-		return xerrors.Errorf("could not listen: %w", err)
+		return fmt.Errorf("could not listen: %w", err)
 	}
 	// l will be closed by s.Serve(l)
 
@@ -69,7 +68,7 @@ func (rp *ReverseProxy) Run(o Option, readyChan chan<- Instance) error {
 		readyChan <- &instance{s: s, l: l}
 	}
 	if err := s.Serve(l); err != nil && err != http.ErrServerClosed {
-		return xerrors.Errorf("could not start a server: %w", err)
+		return fmt.Errorf("could not start a server: %w", err)
 	}
 	return nil
 }
