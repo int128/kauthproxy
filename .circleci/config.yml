@@ -6,19 +6,6 @@ jobs:
       - image: cimg/go:1.15.8
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - go-sum-{{ checksum "go.sum" }}
-      - run: make -C .circleci install-deps
-      - run: make dist
-      - run: |
-          if [ "$CIRCLE_TAG" ]; then
-            make release
-          fi
-      - save_cache:
-          key: go-sum-{{ checksum "go.sum" }}
-          paths:
-            - ~/go/pkg
 
 workflows:
   version: 2
@@ -27,5 +14,7 @@ workflows:
       - build:
           context: open-source
           filters:
+            branches:
+              only: dummy
             tags:
-              only: /.*/
+              only: dummy
