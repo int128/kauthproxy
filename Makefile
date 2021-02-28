@@ -34,7 +34,7 @@ release-external:
 	ghcp pull-request -r int128/homebrew-kauthproxy -b "bump-$(VERSION)" --title "Bump the version to $(VERSION)"
 	# krew
 	ghcp fork-commit -r kubernetes-sigs/krew-index -b "auth-proxy-$(VERSION)" -m "Bump auth-proxy to $(VERSION)" -C dist/output/ plugins/auth-proxy.yaml
-	ghcp pull-request -r kubernetes-sigs/krew-index --base-repo "int128/krew-index" -b "auth-proxy-$(VERSION)" --title "Bump auth-proxy to $(VERSION)" --draft
+	ghcp pull-request --base-repo kubernetes-sigs/krew-index -r "int128/krew-index" -b "auth-proxy-$(VERSION)" --title "Bump auth-proxy to $(VERSION)" --draft
 
 .PHONY: clean
 clean:
