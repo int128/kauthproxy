@@ -14,17 +14,8 @@ import (
 var version = "v0.0.0"
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// cancel the context on interrupted (ctrl+c)
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-	defer signal.Stop(signals)
-	go func() {
-		<-signals
-		cancel()
-	}()
-
+	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
+	defer stop()
 	os.Exit(di.NewCmd().Run(ctx, os.Args, version))
 }
