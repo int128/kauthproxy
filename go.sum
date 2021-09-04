@@ -76,8 +76,9 @@ github.com/cenkalti/backoff/v4 v4.1.1 h1:G2HAfAmvm/GcKan2oOQpBXOd2tT2G57ZnZGWa1P
 github.com/cenkalti/backoff/v4 v4.1.1/go.mod h1:scbssz8iZGpm3xbr14ovlUdkxfGXNInqkPWOWmG2CLw=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
-github.com/chromedp/cdproto v0.0.0-20210323015217-0942afbea50e h1:UimnzLuARNkGi2XsNznUoOLFP/noktdUMrr7fcb3D4U=
 github.com/chromedp/cdproto v0.0.0-20210323015217-0942afbea50e/go.mod h1:At5TxYYdxkbQL0TSefRjhLE3Q0lgvqKKMSFUglJ7i1U=
+github.com/chromedp/cdproto v0.0.0-20210829223513-dac050cc1a27 h1:XEpCRN7BeYHRtw9utD6bSyGOvBqg+qYsaZxVp39oN/o=
+github.com/chromedp/cdproto v0.0.0-20210829223513-dac050cc1a27/go.mod h1:At5TxYYdxkbQL0TSefRjhLE3Q0lgvqKKMSFUglJ7i1U=
 github.com/chromedp/chromedp v0.6.10 h1:Yd4X6ngkWbn6A+hv6mUzV9kVHrPn7L4+vf2uyNbze2s=
 github.com/chromedp/chromedp v0.6.10/go.mod h1:Q8L2uDLH9YFYbThK5fqPpyWa3CT4y9dqHLxaQr+Yhl8=
 github.com/chromedp/sysutil v1.0.0 h1:+ZxhTpfpZlmchB58ih/LBHX52ky7w2VhQVKQMucy3Ic=
