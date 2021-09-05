@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/chromedp"
 	"golang.org/x/sync/errgroup"
 )
@@ -68,7 +67,7 @@ func runBrowser(ctx context.Context) error {
 	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	err := chromedp.Run(ctx,
-		emulation.SetDeviceMetricsOverride(2048, 1152, 1, false),
+		chromedp.EmulateViewport(2048, 1152),
 		// open the page of pod list
 		navigate("http://localhost:18000/#/pod?namespace=kube-system"),
 		// wait for a link on the page
