@@ -5,14 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 
-	"github.com/chromedp/cdproto/emulation"
-	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	"golang.org/x/sync/errgroup"
 )
@@ -70,7 +67,7 @@ func runBrowser(ctx context.Context) error {
 	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	err := chromedp.Run(ctx,
-		emulation.SetDeviceMetricsOverride(2048, 1152, 1, false),
+		chromedp.EmulateViewport(2048, 1152),
 		// open the page of pod list
 		navigate("http://localhost:18000/#/pod?namespace=kube-system"),
 		// wait for a link on the page
@@ -105,39 +102,11 @@ func navigate(urlstr string) chromedp.Action {
 	})
 }
 
-// capture entire browser viewport:
 // https://github.com/chromedp/examples/blob/master/screenshot/main.go
 func takeScreenshot(name string) chromedp.Action {
 	return chromedp.ActionFunc(func(ctx context.Context) error {
-		// get layout metrics
-		_, _, contentSize, err := page.GetLayoutMetrics().Do(ctx)
-		if err != nil {
-			return fmt.Errorf("could not get layout metrics: %w", err)
-		}
-
-		width, height := int64(math.Ceil(contentSize.Width)), int64(math.Ceil(contentSize.Height))
-
-		// force viewport emulation
-		err = emulation.SetDeviceMetricsOverride(width, height, 1, false).
-			WithScreenOrientation(&emulation.ScreenOrientation{
-				Type:  emulation.OrientationTypePortraitPrimary,
-				Angle: 0,
-			}).
-			Do(ctx)
-		if err != nil {
-			return fmt.Errorf("could not set viewport emulation: %w", err)
-		}
-
-		// capture screenshot
-		b, err := page.CaptureScreenshot().
-			WithClip(&page.Viewport{
-				X:      contentSize.X,
-				Y:      contentSize.Y,
-				Width:  contentSize.Width,
-				Height: contentSize.Height,
-				Scale:  1,
-			}).Do(ctx)
-		if err != nil {
+		var b []byte
+		if err := chromedp.FullScreenshot(&b, 90).Do(ctx); err != nil {
 			return fmt.Errorf("could not capture a screenshot: %w", err)
 		}
 		if err := ioutil.WriteFile(name, b, 0644); err != nil {
