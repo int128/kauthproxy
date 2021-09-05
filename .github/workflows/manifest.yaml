@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [master]
     paths:
-      - e2e-test/*.yaml
+      - e2e_test/*.yaml
       - .github/workflows/manifest.yaml
 
 jobs:
@@ -25,13 +25,13 @@ jobs:
       - uses: int128/kustomize-action@v1
         id: kustomize-head
         with:
-          kustomization: e2e-test/kustomization.yaml
+          kustomization: e2e_test/kustomization.yaml
           write-individual-files: true
       - uses: int128/kustomize-action@v1
         id: kustomize-base
         with:
           base-directory: master
-          kustomization: e2e-test/kustomization.yaml
+          kustomization: e2e_test/kustomization.yaml
           write-individual-files: true
       - uses: int128/diff-action@v1
         with:
