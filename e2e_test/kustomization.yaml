@@ -5,5 +5,5 @@ resources:
   - https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.5.2/components.yaml
   # Service account for end-to-end test
   - kauthproxy-role.yaml
-patchesStrategicMerge:
-  - metrics-server-patch.yaml
+#patchesStrategicMerge:
+#  - metrics-server-patch.yaml
