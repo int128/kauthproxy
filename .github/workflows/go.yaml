@@ -8,8 +8,6 @@ on:
       - .github/workflows/go.yaml
       - pkg/**
       - go.*
-    tags:
-      - v*
   pull_request:
     branches:
       - master
@@ -29,29 +27,3 @@ jobs:
     uses: int128/go-workflows/.github/workflows/test.yaml@main
     with:
       go-version: 1.16
-
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.16
-      - uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            go-
-      - run: go install github.com/int128/goxzst@latest
-      - run: go install github.com/int128/ghcp@latest
-      - run: echo "VERSION=${GITHUB_REF##*/}" >> "$GITHUB_ENV"
-      - run: make dist
-      - run: make release
-        if: startswith(github.ref, 'refs/tags/')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: make release-external
-        if: startswith(github.ref, 'refs/tags/')
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
