@@ -20,15 +20,9 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.16
-      - uses: golangci/golangci-lint-action@v2
-        with:
-          version: v1.38.0
+    uses: int128/go-workflows/.github/workflows/lint.yaml@main
+    with:
+      go-version: 1.16
 
   test:
     uses: int128/go-workflows/.github/workflows/test.yaml@main
