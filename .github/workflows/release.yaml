@@ -48,7 +48,6 @@ jobs:
       GOOS: ${{ matrix.platform.GOOS }}
       GOARCH: ${{ matrix.platform.GOARCH }}
       CGO_ENABLED: ${{ matrix.platform.CGO_ENABLED }}
-    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
