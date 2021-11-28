@@ -48,7 +48,7 @@ spec:
       matchLabels:
         os: darwin
         arch: arm64
-  - bin: kauthproxy
+  - bin: kauthproxy.exe
     {{ addURIAndSha "https://github.com/int128/kauthproxy/releases/download/{{ .TagName }}/kauthproxy_windows_amd64.zip" .TagName }}
     selector:
       matchLabels:
