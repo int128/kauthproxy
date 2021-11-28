@@ -56,3 +56,13 @@ jobs:
       - uses: int128/go-actions/release@v1
         with:
           binary: kauthproxy
+
+  publish:
+    if: startswith(github.ref, 'refs/tags/')
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: rajatjindal/krew-release-bot@v0.0.40
