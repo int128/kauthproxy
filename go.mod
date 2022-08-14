@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/cenkalti/backoff/v4 v4.1.3
-	github.com/chromedp/chromedp v0.8.3
+	github.com/chromedp/chromedp v0.8.4
 	github.com/golang/mock v1.6.0
 	github.com/google/wire v0.5.0
 	github.com/int128/listener v1.1.0
