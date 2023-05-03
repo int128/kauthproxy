@@ -122,14 +122,14 @@ type runOption struct {
 
 // run runs a port forwarder and reverse proxy, and waits for them, as follows:
 //
-//	1. Run a port forwarder.
-//	2. When the port forwarder is ready, run a reverse proxy.
-//	3. When the reverse proxy is ready, open the browser (only first time).
+//  1. Run a port forwarder.
+//  2. When the port forwarder is ready, run a reverse proxy.
+//  3. When the reverse proxy is ready, open the browser (only first time).
 //
 // When the context is canceled,
 //
-//	- Shut down the port forwarder.
-//	- Shut down the reverse proxy.
+//   - Shut down the port forwarder.
+//   - Shut down the reverse proxy.
 //
 // This never returns nil.
 // It returns an error which wraps context.Canceled if the context is canceled.
