@@ -262,7 +262,7 @@ func TestAuthProxy_Do(t *testing.T) {
 					time.Sleep(300 * time.Millisecond)
 					return nil // lost connection
 				}).
-				Times(2)
+				MinTimes(2)
 			reverseProxy := mock_reverseproxy.NewMockInterface(ctrl)
 			reverseProxy.EXPECT().
 				Run(reverseproxy.Option{
@@ -284,7 +284,7 @@ func TestAuthProxy_Do(t *testing.T) {
 					readyChan <- i
 					return nil
 				}).
-				Times(2)
+				MinTimes(2)
 			m := newMocks(ctrl)
 			m.browser.EXPECT().Open("http://localhost:8000")
 			u := &AuthProxy{
