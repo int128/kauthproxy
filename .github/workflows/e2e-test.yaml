@@ -26,7 +26,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: 1.21.2
-          cache: true
       - run: make -C e2e_test -j3
       - run: git config --global user.email ci@example.com
       - run: git config --global user.name ci
