@@ -21,7 +21,7 @@ Note that kauthproxy does not work with [client certificate authentication](http
 
 ### Install
 
-Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kauthproxy/releases).
+Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew), [aqua](https://aquaproj.github.io/), or [GitHub Releases](https://github.com/int128/kauthproxy/releases).
 
 ```sh
 # Homebrew (macOS)
@@ -29,6 +29,9 @@ brew install int128/kauthproxy/kauthproxy
 
 # Krew (macOS, Linux and Windows)
 kubectl krew install auth-proxy
+
+# aqua
+aqua g -i int128/kauthproxy
 ```
 
 You can deploy the manifest of Kubernetes Dashboard from [here](https://github.com/kubernetes/dashboard).
