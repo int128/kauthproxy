@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -109,7 +108,7 @@ func takeScreenshot(name string) chromedp.Action {
 		if err := chromedp.FullScreenshot(&b, 90).Do(ctx); err != nil {
 			return fmt.Errorf("could not capture a screenshot: %w", err)
 		}
-		if err := ioutil.WriteFile(name, b, 0644); err != nil {
+		if err := os.WriteFile(name, b, 0644); err != nil {
 			return fmt.Errorf("could not write: %w", err)
 		}
 		log.Printf("saved screenshot to %s", name)
