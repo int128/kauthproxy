@@ -18,9 +18,9 @@ on:
 
 jobs:
   check:
-    uses: int128/go-workflows/.github/workflows/check.yaml@v0.2.1
+    uses: int128/go-workflows/.github/workflows/check.yaml@v0.3.0
     with:
-      go-version: 1.21.6
+      go-version-file: go.mod
       golangci-lint-version: v1.55.2
 
   test:
@@ -30,5 +30,5 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
       - uses: actions/setup-go@v5
         with:
-          go-version: 1.21.6
+          go-version-file: go.mod
       - run: go test -v -race ./...
