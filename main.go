@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/int128/kauthproxy/pkg/di"
+	"github.com/int128/kauthproxy/internal/di"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
