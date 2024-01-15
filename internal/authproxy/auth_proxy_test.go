@@ -18,8 +18,8 @@ import (
 	"github.com/int128/kauthproxy/internal/reverseproxy"
 	"github.com/int128/kauthproxy/internal/reverseproxy/mock_reverseproxy"
 	"github.com/int128/kauthproxy/internal/transport"
-	v1 "k8s.io/api/core/v1"
-	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 )
 
@@ -40,8 +40,8 @@ func newTransport(t *testing.T) transport.NewFunc {
 func TestAuthProxy_Do(t *testing.T) {
 	const containerPort = 18888
 	const transitPort = 28888
-	pod := &v1.Pod{
-		ObjectMeta: v1meta.ObjectMeta{
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "kubernetes-dashboard-12345678-12345678",
 			Namespace: "kubernetes-dashboard",
 		},

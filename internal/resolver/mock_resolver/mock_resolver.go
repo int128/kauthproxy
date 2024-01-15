@@ -8,7 +8,7 @@ import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
 	resolver "github.com/int128/kauthproxy/internal/resolver"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	rest "k8s.io/client-go/rest"
 	reflect "reflect"
 )
@@ -75,10 +75,10 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 }
 
 // FindPodByName mocks base method.
-func (m *MockInterface) FindPodByName(arg0 context.Context, arg1, arg2 string) (*v1.Pod, int, error) {
+func (m *MockInterface) FindPodByName(arg0 context.Context, arg1, arg2 string) (*corev1.Pod, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindPodByName", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*v1.Pod)
+	ret0, _ := ret[0].(*corev1.Pod)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -91,10 +91,10 @@ func (mr *MockInterfaceMockRecorder) FindPodByName(arg0, arg1, arg2 interface{})
 }
 
 // FindPodByServiceName mocks base method.
-func (m *MockInterface) FindPodByServiceName(arg0 context.Context, arg1, arg2 string) (*v1.Pod, int, error) {
+func (m *MockInterface) FindPodByServiceName(arg0 context.Context, arg1, arg2 string) (*corev1.Pod, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindPodByServiceName", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*v1.Pod)
+	ret0, _ := ret[0].(*corev1.Pod)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

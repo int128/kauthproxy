@@ -8,10 +8,10 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kauthproxy/internal/logger"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 )
 
@@ -44,18 +44,18 @@ func (f *Factory) New(config *rest.Config) (Interface, error) {
 }
 
 type Interface interface {
-	FindPodByServiceName(ctx context.Context, namespace, serviceName string) (*v1.Pod, int, error)
-	FindPodByName(ctx context.Context, namespace, podName string) (*v1.Pod, int, error)
+	FindPodByServiceName(ctx context.Context, namespace, serviceName string) (*corev1.Pod, int, error)
+	FindPodByName(ctx context.Context, namespace, podName string) (*corev1.Pod, int, error)
 }
 
 // Resolver provides resolving a pod and container port.
 type Resolver struct {
 	Logger logger.Interface
-	CoreV1 corev1.CoreV1Interface
+	CoreV1 typedcorev1.CoreV1Interface
 }
 
 // FindPodByServiceName returns a pod and container port associated with the service.
-func (r *Resolver) FindPodByServiceName(ctx context.Context, namespace, serviceName string) (*v1.Pod, int, error) {
+func (r *Resolver) FindPodByServiceName(ctx context.Context, namespace, serviceName string) (*corev1.Pod, int, error) {
 	r.Logger.V(1).Infof("finding service %s in namespace %s", serviceName, namespace)
 	service, err := r.CoreV1.Services(namespace).Get(ctx, serviceName, metav1.GetOptions{})
 	if err != nil {
@@ -88,7 +88,7 @@ func (r *Resolver) FindPodByServiceName(ctx context.Context, namespace, serviceN
 }
 
 // FindPodByName finds a pod and container port by name.
-func (r *Resolver) FindPodByName(ctx context.Context, namespace, podName string) (*v1.Pod, int, error) {
+func (r *Resolver) FindPodByName(ctx context.Context, namespace, podName string) (*corev1.Pod, int, error) {
 	r.Logger.V(1).Infof("finding pod %s in namespace %s", podName, namespace)
 	pod, err := r.CoreV1.Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 	if err != nil {

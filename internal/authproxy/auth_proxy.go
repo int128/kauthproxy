@@ -18,7 +18,7 @@ import (
 	"github.com/int128/kauthproxy/internal/reverseproxy"
 	"github.com/int128/kauthproxy/internal/transport"
 	"golang.org/x/sync/errgroup"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 )
 
@@ -214,7 +214,7 @@ func (u *AuthProxy) run(ctx context.Context, o runOption) error {
 	return nil
 }
 
-func parseTargetURL(ctx context.Context, r resolver.Interface, namespace string, u *url.URL) (*v1.Pod, int, error) {
+func parseTargetURL(ctx context.Context, r resolver.Interface, namespace string, u *url.URL) (*corev1.Pod, int, error) {
 	h := u.Hostname()
 	if strings.HasSuffix(h, ".svc") {
 		serviceName := strings.TrimSuffix(h, ".svc")
