@@ -4,7 +4,7 @@ go 1.21.6
 
 require (
 	github.com/cenkalti/backoff/v4 v4.2.1
-	github.com/chromedp/chromedp v0.9.3
+	github.com/chromedp/chromedp v0.9.4
 	github.com/golang/mock v1.6.0
 	github.com/google/wire v0.5.0
 	github.com/int128/listener v1.1.0
@@ -21,7 +21,7 @@ require (
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
-	github.com/chromedp/cdproto v0.0.0-20231011050154-1d073bb38998 // indirect
+	github.com/chromedp/cdproto v0.0.0-20240127002248-bd7a66284627 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
@@ -33,7 +33,7 @@ require (
 	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
-	github.com/gobwas/ws v1.3.0 // indirect
+	github.com/gobwas/ws v1.3.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/btree v1.0.1 // indirect
