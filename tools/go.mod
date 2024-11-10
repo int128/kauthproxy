@@ -2,7 +2,11 @@ module github.com/int128/kauthproxy/tools
 
 go 1.23.3
 
-require github.com/golangci/golangci-lint v1.61.0
+require (
+	github.com/golangci/golangci-lint v1.61.0
+	github.com/google/wire v0.6.0
+	go.uber.org/mock v0.5.0
+)
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
@@ -70,6 +74,7 @@ require (
 	github.com/golangci/revgrep v0.5.3 // indirect
 	github.com/golangci/unconvert v0.0.0-20240309020433-c5143eacb3ed // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/subcommands v1.2.0 // indirect
 	github.com/gordonklaus/ineffassign v0.1.0 // indirect
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect
 	github.com/gostaticanalysis/comment v1.4.2 // indirect
