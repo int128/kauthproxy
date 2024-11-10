@@ -1,4 +1,5 @@
 /.idea
+/tools/bin/
 
 /dist/output
 /coverage.out
