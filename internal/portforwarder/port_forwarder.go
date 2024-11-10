@@ -18,7 +18,7 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*PortForwarder)),
 )
 
-//go:generate go run go.uber.org/mock/mockgen -destination mock_portforwarder/mock_portforwarder.go github.com/int128/kauthproxy/internal/portforwarder Interface
+//go:generate go run -mod=mod go.uber.org/mock/mockgen -destination mock_portforwarder/mock_portforwarder.go github.com/int128/kauthproxy/internal/portforwarder Interface
 
 // Option represents an option of PortForwarder.
 type Option struct {
