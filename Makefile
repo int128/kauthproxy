@@ -7,11 +7,7 @@ test:
 
 .PHONY: generate
 generate:
-	$(MAKE) -C tools
-	./tools/bin/wire ./internal/di
-	# TODO:
-	# rm -fr mocks/
-	# ./tools/bin/mockery
+	go generate ./internal/...
 
 .PHONY: lint
 lint:

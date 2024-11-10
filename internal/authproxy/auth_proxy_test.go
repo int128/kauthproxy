@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/int128/kauthproxy/internal/browser/mock_browser"
 	"github.com/int128/kauthproxy/internal/env/mock_env"
 	"github.com/int128/kauthproxy/internal/logger/mock_logger"
@@ -18,6 +17,7 @@ import (
 	"github.com/int128/kauthproxy/internal/reverseproxy"
 	"github.com/int128/kauthproxy/internal/reverseproxy/mock_reverseproxy"
 	"github.com/int128/kauthproxy/internal/transport"
+	"go.uber.org/mock/gomock"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"

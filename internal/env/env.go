@@ -12,7 +12,7 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*Env)),
 )
 
-//go:generate mockgen -destination mock_env/mock_env.go github.com/int128/kauthproxy/internal/env Interface
+//go:generate go run go.uber.org/mock/mockgen -destination mock_env/mock_env.go github.com/int128/kauthproxy/internal/env Interface
 
 type Interface interface {
 	AllocateLocalPort() (int, error)
