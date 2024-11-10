@@ -12,8 +12,6 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*Browser)),
 )
 
-//go:generate mockgen -destination mock_browser/mock_browser.go github.com/int128/kauthproxy/internal/browser Interface
-
 type Interface interface {
 	Open(url string) error
 }

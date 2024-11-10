@@ -20,8 +20,6 @@ var Set = wire.NewSet(
 	wire.Bind(new(FactoryInterface), new(*Factory)),
 )
 
-//go:generate mockgen -destination mock_resolver/mock_resolver.go github.com/int128/kauthproxy/internal/resolver FactoryInterface,Interface
-
 type FactoryInterface interface {
 	New(config *rest.Config) (Interface, error)
 }

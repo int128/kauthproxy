@@ -1,10 +1,10 @@
 GOBIN := $(CURDIR)/bin
 export GOBIN
 
-all: bin/mockery bin/wire bin/golangci-lint
+all: bin/mockgen bin/wire bin/golangci-lint
 
-bin/mockery:
-	go install github.com/vektra/mockery/v2
+bin/mockgen:
+	go install go.uber.org/mock/mockgen
 
 bin/wire:
 	go install github.com/google/wire/cmd/wire

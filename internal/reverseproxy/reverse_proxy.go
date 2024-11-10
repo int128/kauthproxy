@@ -17,8 +17,6 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*ReverseProxy)),
 )
 
-//go:generate mockgen -destination mock_reverseproxy/mock_reverseproxy.go github.com/int128/kauthproxy/internal/reverseproxy Interface,Instance
-
 // Option represents an option of a reverse proxy.
 type Option struct {
 	Transport             http.RoundTripper
