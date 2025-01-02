@@ -3,7 +3,7 @@ module github.com/int128/kauthproxy/tools
 go 1.23.4
 
 require (
-	github.com/golangci/golangci-lint v1.63.1
+	github.com/golangci/golangci-lint v1.63.2
 	github.com/google/wire v0.6.0
 	go.uber.org/mock v0.5.0
 )
