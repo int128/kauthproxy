@@ -7,16 +7,14 @@ test:
 
 .PHONY: generate
 generate:
-	$(MAKE) -C tools
-	./tools/bin/wire ./internal/di
+	go tool github.com/google/wire/cmd/wire ./internal/di
 	rm -fr internal/mocks
-	./tools/bin/mockgen -destination internal/mocks/mock_browser/mock.go github.com/int128/kauthproxy/internal/browser Interface
-	./tools/bin/mockgen -destination internal/mocks/mock_env/mock.go github.com/int128/kauthproxy/internal/env Interface
-	./tools/bin/mockgen -destination internal/mocks/mock_portforwarder/mock.go github.com/int128/kauthproxy/internal/portforwarder Interface
-	./tools/bin/mockgen -destination internal/mocks/mock_resolver/mock.go github.com/int128/kauthproxy/internal/resolver FactoryInterface,Interface
-	./tools/bin/mockgen -destination internal/mocks/mock_reverseproxy/mock.go github.com/int128/kauthproxy/internal/reverseproxy Interface,Instance
+	go tool go.uber.org/mock/mockgen -destination internal/mocks/mock_browser/mock.go github.com/int128/kauthproxy/internal/browser Interface
+	go tool go.uber.org/mock/mockgen -destination internal/mocks/mock_env/mock.go github.com/int128/kauthproxy/internal/env Interface
+	go tool go.uber.org/mock/mockgen -destination internal/mocks/mock_portforwarder/mock.go github.com/int128/kauthproxy/internal/portforwarder Interface
+	go tool go.uber.org/mock/mockgen -destination internal/mocks/mock_resolver/mock.go github.com/int128/kauthproxy/internal/resolver FactoryInterface,Interface
+	go tool go.uber.org/mock/mockgen -destination internal/mocks/mock_reverseproxy/mock.go github.com/int128/kauthproxy/internal/reverseproxy Interface,Instance
 
 .PHONY: lint
 lint:
-	$(MAKE) -C tools
-	./tools/bin/golangci-lint run
+	go tool github.com/golangci/golangci-lint/cmd/golangci-lint run
