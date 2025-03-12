@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0
-	github.com/chromedp/chromedp v0.12.1
+	github.com/chromedp/chromedp v0.13.1
 	github.com/google/wire v0.6.0
 	github.com/int128/listener v1.2.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -55,7 +55,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/chavacava/garif v0.1.0 // indirect
-	github.com/chromedp/cdproto v0.0.0-20250120090109-d38428e4d9c8 // indirect
+	github.com/chromedp/cdproto v0.0.0-20250222051814-50c6cb17f10a // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/ckaznocha/intrange v0.3.0 // indirect
 	github.com/curioswitch/go-reassign v0.3.0 // indirect
@@ -73,6 +73,7 @@ require (
 	github.com/ghostiam/protogetter v0.3.9 // indirect
 	github.com/go-critic/go-critic v0.12.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
+	github.com/go-json-experiment/json v0.0.0-20250211171154-1ae217ad3535 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
