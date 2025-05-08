@@ -24,7 +24,7 @@ func (*Env) AllocateLocalPort() (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("could not listen: %w", err)
 	}
-	defer l.Close()
+	defer func() { err := l.Close(); if err != nil { print(err) } }()
 	addr, ok := l.Addr().(*net.TCPAddr)
 	if !ok {
 		return 0, fmt.Errorf("internal error: unknown type %T", l.Addr())
