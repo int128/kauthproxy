@@ -6,7 +6,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/chromedp/chromedp v0.13.6
 	github.com/google/wire v0.6.0
-	github.com/int128/listener v1.2.0
+	github.com/int128/listener v1.3.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
