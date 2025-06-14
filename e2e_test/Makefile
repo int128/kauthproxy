@@ -12,10 +12,9 @@ $(KUBECONFIG):
 
 .PHONY: deploy
 deploy: cluster
-	kustomize build | kubectl apply -f -
-	kubectl -n kube-system rollout status deployment metrics-server
-	kubectl -n kubernetes-dashboard rollout status deployment kubernetes-dashboard
+	kubectl apply -f kauthproxy-role.yaml
 	kubectl get secret tester-token '-ojsonpath={.data.token}' | base64 --decode | xargs kubectl config set-credentials tester --token
+	helmfile sync
 
 output/kauthproxy:
 	go build -o $@ ..
