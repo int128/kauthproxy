@@ -11,5 +11,6 @@ releases:
     version: 7.13.0
     wait: true
   - name: metrics-server
+    namespace: kube-system
     chart: metrics-server/metrics-server
     version: 3.12.2
