@@ -38,7 +38,7 @@ func runKauthproxy(chInterrupt <-chan struct{}) error {
 		"--namespace=kubernetes-dashboard",
 		"--user=tester",
 		"--skip-open-browser",
-		"https://kubernetes-dashboard.svc",
+		"https://kubernetes-dashboard-kong-proxy.svc",
 	)
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr

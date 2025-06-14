@@ -1,0 +1,16 @@
+repositories:
+  - name: kubernetes-dashboard
+    url: https://kubernetes.github.io/dashboard/
+  - name: metrics-server
+    url: https://kubernetes-sigs.github.io/metrics-server/
+
+releases:
+  - name: kubernetes-dashboard
+    namespace: kubernetes-dashboard
+    chart: kubernetes-dashboard/kubernetes-dashboard
+    version: 7.13.0
+    wait: true
+  - name: metrics-server
+    namespace: kube-system
+    chart: metrics-server/metrics-server
+    version: 3.12.2
