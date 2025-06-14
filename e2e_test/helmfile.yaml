@@ -5,6 +5,6 @@ repositories:
 releases:
   - name: kubernetes-dashboard
     namespace: kubernetes-dashboard
-    chart: kubernetes-dashboard
+    chart: kubernetes-dashboard/kubernetes-dashboard
     version: 7.13.0
     wait: true
