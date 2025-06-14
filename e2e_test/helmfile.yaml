@@ -13,4 +13,3 @@ releases:
   - name: metrics-server
     chart: metrics-server/metrics-server
     version: 3.12.2
-    wait: true
