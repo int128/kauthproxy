@@ -12,6 +12,7 @@ $(KUBECONFIG):
 
 .PHONY: deploy
 deploy: cluster
+	kubectl create namespace kubernetes-dashboard
 	kubectl apply -f kauthproxy-role.yaml
 	kubectl get secret tester-token '-ojsonpath={.data.token}' | base64 --decode | xargs kubectl config set-credentials tester --token
 	helmfile sync
