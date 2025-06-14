@@ -31,7 +31,7 @@ type Interface interface {
 	Do(ctx context.Context, in Option) error
 }
 
-var portForwarderConnectionLostError = errors.New("connection lost")
+var errPortForwarderConnectionLost = errors.New("connection lost")
 
 // AuthProxy provides a use-case of authentication proxy.
 type AuthProxy struct {
@@ -100,7 +100,7 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 	b := backoff.NewExponentialBackOff()
 	if err := backoff.Retry(func() error {
 		if err := u.run(ctx, ro); err != nil {
-			if errors.Is(err, portForwarderConnectionLostError) {
+			if errors.Is(err, errPortForwarderConnectionLost) {
 				u.Logger.Printf("retrying: %s", err)
 				return err
 			}
@@ -133,7 +133,7 @@ type runOption struct {
 //
 // This never returns nil.
 // It returns an error which wraps context.Canceled if the context is canceled.
-// It returns portForwarderConnectionLostError if a connection has lost.
+// It returns errPortForwarderConnectionLost if a connection has lost.
 func (u *AuthProxy) run(ctx context.Context, o runOption) error {
 	portForwarderIsReady := make(chan struct{})
 	reverseProxyIsReady := make(chan reverseproxy.Instance, 1)
@@ -150,7 +150,7 @@ func (u *AuthProxy) run(ctx context.Context, o runOption) error {
 		u.Logger.V(1).Infof("stopped the port forwarder")
 		if ctx.Err() == nil {
 			u.Logger.V(1).Infof("connection of the port forwarder has lost")
-			return portForwarderConnectionLostError
+			return errPortForwarderConnectionLost
 		}
 		return nil
 	})
