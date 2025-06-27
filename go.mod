@@ -4,7 +4,7 @@ go 1.24.4
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0
-	github.com/chromedp/chromedp v0.13.6
+	github.com/chromedp/chromedp v0.13.7
 	github.com/google/wire v0.6.0
 	github.com/int128/listener v1.3.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
