@@ -9,7 +9,7 @@ require (
 	github.com/int128/listener v1.3.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/spf13/cobra v1.9.1
-	github.com/spf13/pflag v1.0.6
+	github.com/spf13/pflag v1.0.7
 	go.uber.org/mock v0.5.2
 	golang.org/x/sync v0.16.0
 	k8s.io/api v0.33.3
