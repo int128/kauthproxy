@@ -5,6 +5,6 @@
     "github>int128/go-renovate-config#v1.9.0",
     "github>int128/go-renovate-config:go-version#v1.9.0",
     "github>int128/go-renovate-config:kubernetes#v1.9.0",
-    "github>int128/go-renovate-config:github-releases#v1.9.0(**/kustomization.yaml)",
-  ],
+    "github>int128/go-renovate-config:github-releases#v1.9.0(**/kustomization.yaml)"
+  ]
 }
