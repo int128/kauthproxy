@@ -78,12 +78,8 @@ It gets a token from the current credential plugin (e.g. EKS, OpenID Connect).
 Then it appends the authorization header to HTTP requests, like "authorization: Bearer token".
 All traffic is routed by the authentication proxy and port forwarder as follows:
   [browser] -> [authentication proxy] -> [port forwarder] -> [pod]`,
-		Example: `  # To access a service:
-  kubectl auth-proxy https://kubernetes-dashboard.svc
-
-  # To access a pod:
-  kubectl auth-proxy https://kubernetes-dashboard-57fc4fcb74-jjg77`,
-		Args: cobra.ExactArgs(1),
+		Example: `kubectl auth-proxy http://headlamp.svc`,
+		Args:    cobra.ExactArgs(1),
 		RunE: func(c *cobra.Command, args []string) error {
 			return cmd.runRootCmd(c.Context(), o, args)
 		},
