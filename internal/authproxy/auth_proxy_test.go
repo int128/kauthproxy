@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -249,7 +250,7 @@ func TestAuthProxy_Do(t *testing.T) {
 			defer ctrl.Finish()
 
 			portForwarder := mock_portforwarder.NewMockInterface(ctrl)
-			callCount := 0
+			var callCount atomic.Int32
 			portForwarder.EXPECT().
 				Run(portforwarder.Option{
 					Config:              &restConfig,
@@ -259,10 +260,10 @@ func TestAuthProxy_Do(t *testing.T) {
 					TargetContainerPort: containerPort,
 				}, notNil, notNil).
 				DoAndReturn(func(o portforwarder.Option, readyChan chan struct{}, stopChan <-chan struct{}) error {
-					callCount++
+					count := callCount.Add(1)
 					time.Sleep(100 * time.Millisecond)
 					close(readyChan)
-					if callCount == 1 {
+					if count == 1 {
 						// First call: simulate connection lost after 300ms
 						time.Sleep(300 * time.Millisecond)
 						return nil // lost connection
