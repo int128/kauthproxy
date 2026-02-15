@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -238,16 +239,18 @@ func TestAuthProxy_Do(t *testing.T) {
 			// 100ms: the port forwarder is ready
 			// 200ms: the reverse proxy is ready
 			// 400ms: lost connection
-			// 900ms: retrying (after the backoff 500ms)
-			// 1000ms: the port forwarder is ready
-			// 1100ms: the reverse proxy is ready
-			// 1200ms: cancel the context
-			ctx, cancel := context.WithTimeout(context.TODO(), 1200*time.Millisecond)
+			// backoff: 250-750ms (500ms ± 50% due to randomization)
+			// retry:   650-1150ms (worst case: 400ms + 750ms)
+			// 750-1250ms: the port forwarder is ready (2nd attempt)
+			// 850-1350ms: the reverse proxy is ready (2nd attempt)
+			// 1500ms: cancel the context
+			ctx, cancel := context.WithTimeout(context.TODO(), 1500*time.Millisecond)
 			defer cancel()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
 			portForwarder := mock_portforwarder.NewMockInterface(ctrl)
+			var callCount atomic.Int32
 			portForwarder.EXPECT().
 				Run(portforwarder.Option{
 					Config:              &restConfig,
@@ -257,12 +260,19 @@ func TestAuthProxy_Do(t *testing.T) {
 					TargetContainerPort: containerPort,
 				}, notNil, notNil).
 				DoAndReturn(func(o portforwarder.Option, readyChan chan struct{}, stopChan <-chan struct{}) error {
+					count := callCount.Add(1)
 					time.Sleep(100 * time.Millisecond)
 					close(readyChan)
-					time.Sleep(300 * time.Millisecond)
-					return nil // lost connection
+					if count == 1 {
+						// First call: simulate connection lost after 300ms
+						time.Sleep(300 * time.Millisecond)
+						return nil // lost connection
+					}
+					// Subsequent calls: wait for stop signal (normal shutdown)
+					<-stopChan
+					return nil
 				}).
-				MinTimes(2)
+				Times(2)
 			reverseProxy := mock_reverseproxy.NewMockInterface(ctrl)
 			reverseProxy.EXPECT().
 				Run(reverseproxy.Option{
@@ -284,7 +294,7 @@ func TestAuthProxy_Do(t *testing.T) {
 					readyChan <- i
 					return nil
 				}).
-				MinTimes(2)
+				Times(2)
 			m := newMocks(ctrl)
 			m.browser.EXPECT().Open("http://localhost:8000")
 			u := &AuthProxy{
