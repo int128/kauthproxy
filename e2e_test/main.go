@@ -35,10 +35,10 @@ func main() {
 
 func runKauthproxy(chInterrupt <-chan struct{}) error {
 	c := exec.Command("output/kauthproxy",
-		"--namespace=kubernetes-dashboard",
+		"--namespace=kube-system",
 		"--user=tester",
 		"--skip-open-browser",
-		"https://kubernetes-dashboard-kong-proxy.svc",
+		"http://headlamp.svc",
 	)
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
@@ -68,9 +68,9 @@ func runBrowser(ctx context.Context) error {
 	err := chromedp.Run(ctx,
 		chromedp.EmulateViewport(2048, 1152),
 		// open the page of pod list
-		navigate("http://localhost:18000/#/pod?namespace=kube-system"),
+		navigate("http://localhost:18000/c/main/pods"),
 		// wait for a link on the page
-		chromedp.WaitReady(`a[href^='#/pod/kube-system']`, chromedp.ByQuery),
+		chromedp.WaitReady(`a[href='/c/main/namespaces/kube-system']`, chromedp.ByQuery),
 		takeScreenshot("output/screenshot.png"),
 	)
 	if err != nil {
