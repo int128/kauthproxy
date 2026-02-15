@@ -38,7 +38,7 @@ func runKauthproxy(chInterrupt <-chan struct{}) error {
 		"--namespace=kube-system",
 		"--user=tester",
 		"--skip-open-browser",
-		"https://headlamp.svc",
+		"http://headlamp.svc",
 	)
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
