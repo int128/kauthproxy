@@ -1,8 +1,8 @@
 # kauthproxy [![go](https://github.com/int128/kauthproxy/actions/workflows/go.yaml/badge.svg)](https://github.com/int128/kauthproxy/actions/workflows/go.yaml) [![e2e-test](https://github.com/int128/kauthproxy/actions/workflows/e2e-test.yaml/badge.svg)](https://github.com/int128/kauthproxy/actions/workflows/e2e-test.yaml)
 
-This is a kubectl plugin of the authentication proxy to access [Kubernetes Dashboard](https://github.com/kubernetes/dashboard).
+This is a kubectl plugin of the authentication proxy to access [Headlamp](https://headlamp.dev).
 
-You can access Kubernetes Dashboard with your credentials instead of [entering a service account token](https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md).
+You can access Headlamp with your credentials instead of entering a service account token.
 It provides better **user experience and security**.
 
 kauthproxy supports the following environments:
@@ -15,7 +15,6 @@ kauthproxy supports the following environments:
   - [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator)
 
 Note that kauthproxy does not work with [client certificate authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certs).
-
 
 ## Getting Started
 
@@ -34,38 +33,37 @@ kubectl krew install auth-proxy
 aqua g -i int128/kauthproxy
 ```
 
-You can deploy the manifest of Kubernetes Dashboard from [here](https://github.com/kubernetes/dashboard).
+You can deploy the manifest of Headlamp from [here](https://headlamp.dev/docs/latest/installation/in-cluster/).
 
 ### Run
 
-To access Kubernetes Dashboard in your cluster:
+To access Headlamp in your cluster:
 
 ```
-% kubectl auth-proxy -n kubernetes-dashboard https://kubernetes-dashboard.svc
-Starting an authentication proxy for pod/kubernetes-dashboard-57fc4fcb74-jjg77:8443
+% kubectl auth-proxy -n kube-system http://headlamp.svc
+Starting an authentication proxy for pod/headlamp-57fc4fcb74-jjg77:8443
 Open http://127.0.0.1:18000
 Forwarding from 127.0.0.1:57866 -> 8443
 Forwarding from [::1]:57866 -> 8443
 ```
 
 It will automatically open the browser.
-You can see Kubernetes Dashboard logged in as you.
+You can see Headlamp logged in as you.
 
 [![screenshot](https://github.com/int128/kauthproxy/wiki/refs/heads/master/screenshot.png)](e2e_test)
-
 
 ## How it works
 
 ### Authentication
 
-Kubernetes Dashboard supports [header based authentication](https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/README.md#authorization-header).
-kauthproxy forwards HTTP requests from the browser to Kubernetes Dashboard.
+Headlamp supports header based authentication.
+kauthproxy forwards HTTP requests from the browser to Headlamp.
 
 Take a look at the diagram:
 
 ![diagram](docs/kauthproxy.svg)
 
-When you access Kubernetes Dashboard, kauthproxy forwards HTTP requests by the following process:
+When you access Headlamp, kauthproxy forwards HTTP requests by the following process:
 
 1. Acquire your token from the credential plugin or authentication provider.
 1. Set `authorization: bearer TOKEN` header to a request and forward the request to the pod.
@@ -74,13 +72,12 @@ When you access Kubernetes Dashboard, kauthproxy forwards HTTP requests by the f
 
 kauthproxy requires the following privileges:
 
-- Get the Service of Kubernetes Dashboard.
-- List the Pods of Kubernetes Dashboard.
-- Port-forward to the Pod of Kubernetes Dashboard.
+- Get the Service of Headlamp.
+- List the Pods of Headlamp.
+- Port-forward to the Pod of Headlamp.
 
 If you need to assign the least privilege for production,
 see [an example of `Role`](e2e_test/kauthproxy-role.yaml).
-
 
 ## Usage
 
@@ -122,7 +119,6 @@ Flags:
       --vmodule moduleSpec               comma-separated list of pattern=N settings for file-filtered logging
 ```
 
-
 ## Contributions
 
 This is an open source software.
@@ -137,7 +133,7 @@ To provision a cluster:
 brew cask install docker google-chrome
 brew install kind
 
-# provision a cluster and deploy Kubernetes Dashboard
+# provision a cluster and deploy Headlamp
 make -C e2e_test deploy
 ```
 
@@ -149,8 +145,8 @@ export KUBECONFIG=e2e_test/output/kubeconfig.yaml
 # show all pods
 kubectl get pods -A
 
-# open Kubernetes Dashboard
-./kauthproxy -n kubernetes-dashboard --user=tester https://kubernetes-dashboard.svc
+# open Headlamp
+./kauthproxy -n kube-system --user=tester http://headlamp.svc
 ```
 
 To run the automated test:

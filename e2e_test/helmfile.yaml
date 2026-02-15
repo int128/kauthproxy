@@ -1,14 +1,14 @@
 repositories:
-  - name: kubernetes-dashboard
-    url: https://kubernetes.github.io/dashboard/
+  - name: headlamp
+    url: https://kubernetes-sigs.github.io/headlamp/
   - name: metrics-server
     url: https://kubernetes-sigs.github.io/metrics-server/
 
 releases:
-  - name: kubernetes-dashboard
-    namespace: kubernetes-dashboard
-    chart: kubernetes-dashboard/kubernetes-dashboard
-    version: 7.14.0
+  - name: headlamp
+    namespace: kube-system
+    chart: headlamp/headlamp
+    version: 0.40.0
     wait: true
   - name: metrics-server
     namespace: kube-system
