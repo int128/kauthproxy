@@ -3,7 +3,7 @@ module github.com/int128/kauthproxy
 go 1.26.0
 
 require (
-	github.com/cenkalti/backoff/v4 v4.3.0
+	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/chromedp/chromedp v0.14.2
 	github.com/google/wire v0.7.0
 	github.com/int128/listener v1.3.0
