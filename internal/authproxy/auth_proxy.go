@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/google/wire"
 	"github.com/int128/kauthproxy/internal/browser"
 	"github.com/int128/kauthproxy/internal/env"
