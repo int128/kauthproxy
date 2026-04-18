@@ -73,5 +73,5 @@ jobs:
       - run: go build -ldflags "-X main.version=$GITHUB_SHA"
       - uses: int128/go-release-action@9e1d6ec29fc6ffc2ba55f631baf4a73017d228e1 # v2.5.0
         with:
-          binary: cronjob-runner
+          binary: kauthproxy
           release-name: ${{ needs.create.outputs.draft-release-name }}
