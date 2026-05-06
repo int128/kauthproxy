@@ -98,16 +98,17 @@ func (u *AuthProxy) Do(ctx context.Context, o Option) error {
 		onceOpenBrowser: &once,
 	}
 	b := backoff.NewExponentialBackOff()
-	if err := backoff.Retry(func() error {
+	_, err = backoff.Retry(ctx, func() (struct{}, error) {
 		if err := u.run(ctx, ro); err != nil {
 			if errors.Is(err, errPortForwarderConnectionLost) {
 				u.Logger.Printf("retrying: %s", err)
-				return err
+				return struct{}{}, err
 			}
-			return backoff.Permanent(err)
+			return struct{}{}, backoff.Permanent(err)
 		}
-		return nil
-	}, b); err != nil {
+		return struct{}{}, nil
+	}, backoff.WithBackOff(b))
+	if err != nil {
 		return fmt.Errorf("retry over: %w", err)
 	}
 	return nil
