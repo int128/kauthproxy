@@ -8,7 +8,7 @@ releases:
   - name: headlamp
     namespace: kube-system
     chart: headlamp/headlamp
-    version: 0.40.0
+    version: 0.41.0
     wait: true
   - name: metrics-server
     namespace: kube-system
