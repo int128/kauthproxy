@@ -34,9 +34,10 @@ jobs:
       - run: make -C e2e_test -j3
 
       - if: github.event_name == 'pull_request'
-        run: gh pr comment --attach e2e_test/output/screenshot.png --body "$body"
+        run: gh pr comment "$number" --attach e2e_test/output/screenshot.png --body "$body"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          number: ${{ github.event.pull_request.number }}
           body: |-
             ## e2e-test
             ![screenshot](e2e_test/output/screenshot.png)
