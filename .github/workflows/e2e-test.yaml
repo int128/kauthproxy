@@ -32,8 +32,11 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
       - run: make -C e2e_test -j3
-      - run: git config --global user.email ci@example.com
-      - run: git config --global user.name ci
-      - run: make -C e2e_test ci-publish-screenshot
+
+      - if: github.event_name == 'pull_request'
+        run: gh pr comment --attach e2e_test/output/screenshot.png --body "$body"
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          body: |-
+            ## e2e-test
+            ![screenshot](e2e_test/output/screenshot.png)
