@@ -27,13 +27,14 @@ jobs:
     runs-on: ubuntu-slim
     timeout-minutes: 10
     outputs:
-      draft-release-name: ${{ steps.create-draft-release.outputs.draft-release-name }}
+      release-name: ${{ steps.create-draft-release.outputs.release-name }}
     permissions:
       contents: write
     steps:
-      - if: github.event_name == 'push'
-        id: create-draft-release
-        uses: int128/go-release-action/create-draft-release@9e1d6ec29fc6ffc2ba55f631baf4a73017d228e1 # v2.5.0
+      - id: create-draft-release
+        uses: int128/create-draft-release-action@f232d92906ec5d836edf04857b0ba445b08bac2c # v0.7.0
+        with:
+          dry-run: ${{ github.event_name == 'pull_request' }}
 
   build:
     needs: create
@@ -74,4 +75,4 @@ jobs:
       - uses: int128/go-release-action@9e1d6ec29fc6ffc2ba55f631baf4a73017d228e1 # v2.5.0
         with:
           binary: kauthproxy
-          release-name: ${{ needs.create.outputs.draft-release-name }}
+          release-name: ${{ needs.create.outputs.release-name }}
