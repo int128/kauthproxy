@@ -21,6 +21,9 @@ on:
 jobs:
   e2e-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
@@ -32,8 +35,12 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
       - run: make -C e2e_test -j3
-      - run: git config --global user.email ci@example.com
-      - run: git config --global user.name ci
-      - run: make -C e2e_test ci-publish-screenshot
+
+      - if: github.event_name == 'pull_request'
+        run: gh pr comment "$number" --attach e2e_test/output/screenshot.png --body "$body"
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          number: ${{ github.event.pull_request.number }}
+          body: |-
+            ## e2e-test
+            ![screenshot](e2e_test/output/screenshot.png)
