@@ -1,6 +1,6 @@
 module github.com/int128/kauthproxy
 
-go 1.26.6
+go 1.27.1
 
 require (
 	github.com/cenkalti/backoff/v7 v7.0.0
